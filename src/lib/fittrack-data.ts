@@ -58,7 +58,9 @@ export function createEmptyData(): FitTrackData {
 export function isFitTrackData(value: unknown): value is FitTrackData {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return record.version === 1 && ["habits", "workouts", "strength", "sleep", "weight", "meals", "purchases", "coding", "reading", "roadmap"].every((key) => record[key] && typeof record[key] === "object") && typeof record.readingPage === "number" && typeof record.bookPages === "number" && typeof record.readingNotes === "string";
+  const arrays = ["workouts", "strength", "sleep", "weight", "meals", "purchases", "coding", "reading"];
+  const objects = ["habits", "roadmap"];
+  return record.version === 1 && arrays.every((key) => Array.isArray(record[key])) && objects.every((key) => record[key] !== null && typeof record[key] === "object" && !Array.isArray(record[key])) && typeof record.readingPage === "number" && Number.isFinite(record.readingPage) && typeof record.bookPages === "number" && Number.isFinite(record.bookPages) && record.bookPages > 0 && typeof record.readingNotes === "string";
 }
 
 export function mondayOf(dateString: string) {
