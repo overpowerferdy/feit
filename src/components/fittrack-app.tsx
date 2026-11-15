@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import logo from "@/assets/fittrack-logo.png";
 import { Link } from "@tanstack/react-router";
 import {
   Activity, ArrowDownToLine, ArrowUpFromLine, BookOpen, CalendarDays, Check, CheckCircle2,
@@ -294,7 +295,7 @@ export function FitTrackApp({ view }: { view: View }) {
   return (
     <div className="min-h-screen bg-background">
       <nav className="fittrack-rail" aria-label="Main navigation">
-        <div className="fittrack-brand"><span className="flex size-10 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground"><Activity size={22} /></span><div><p className="text-lg font-bold">FitTrack</p><p className="text-xs text-sidebar-foreground/65">Small steps, strong habits</p></div></div>
+        <div className="fittrack-brand"><img src={logo} alt="FitTrack logo" className="size-10 rounded-xl" /><div><p className="text-lg font-bold">FitTrack</p><p className="text-xs text-sidebar-foreground/65">Small steps, strong habits</p></div></div>
         <p className="fittrack-nav-heading">Your space</p>
         <div className="fittrack-nav-links">{links.map(({ view: itemView, label, to, icon: Icon, activeViews }) => { const active = activeViews.includes(view); return <Link key={itemView} to={to} aria-current={active ? "page" : undefined} className={`fittrack-nav-link ${active ? "is-active" : ""}`}><Icon size={20} strokeWidth={1.9} /><span>{label}</span>{active && <ChevronRight className="fittrack-nav-arrow" size={15} />}</Link>; })}</div>
         <div className="fittrack-rail-note"><div className="flex items-center gap-2 text-sm font-semibold"><Sparkles size={16} className="text-sidebar-primary" /> Your pace is enough</div><p className="mt-2 text-xs leading-relaxed text-sidebar-foreground/65">Keep showing up. Progress grows from the small things you repeat.</p></div>
