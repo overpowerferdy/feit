@@ -60,7 +60,7 @@ export function isFitTrackData(value: unknown): value is FitTrackData {
   const record = value as Record<string, unknown>;
   const arrays = ["workouts", "strength", "sleep", "weight", "meals", "purchases", "coding", "reading"];
   const objects = ["habits", "roadmap"];
-  return record.version === 1 && arrays.every((key) => Array.isArray(record[key])) && objects.every((key) => record[key] !== null && typeof record[key] === "object" && !Array.isArray(record[key])) && typeof record.readingPage === "number" && Number.isFinite(record.readingPage) && typeof record.bookPages === "number" && Number.isFinite(record.bookPages) && record.bookPages > 0 && typeof record.readingNotes === "string";
+  return record["version"] === 1 && arrays.every((key) => Array.isArray(record[key])) && objects.every((key) => record[key] !== null && typeof record[key] === "object" && !Array.isArray(record[key])) && typeof record["readingPage"] === "number" && Number.isFinite(record["readingPage"]) && typeof record["bookPages"] === "number" && Number.isFinite(record["bookPages"]) && record["bookPages"] > 0 && typeof record["readingNotes"] === "string";
 }
 
 export function mondayOf(dateString: string) {
