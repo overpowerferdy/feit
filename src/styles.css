@@ -345,3 +345,176 @@
     transition: none;
   }
 }
+
+/* ---------- Motion ---------- */
+:root {
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes feit-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes feit-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@keyframes feit-pop-kf {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+@keyframes feit-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+@keyframes feit-spin-in {
+  from { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes feit-toast-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes feit-nav-bounce {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-3px) scale(1.15); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* Page enter: each section rises in, one after another */
+.feit-view > div > *,
+.feit-stagger > * {
+  animation: feit-rise 520ms var(--ease-out-soft) both;
+  animation-delay: calc(var(--feit-i, 0) * 70ms + var(--feit-base, 0ms));
+}
+.feit-view > div > :nth-child(2), .feit-stagger > :nth-child(2) { --feit-i: 1; }
+.feit-view > div > :nth-child(3), .feit-stagger > :nth-child(3) { --feit-i: 2; }
+.feit-view > div > :nth-child(4), .feit-stagger > :nth-child(4) { --feit-i: 3; }
+.feit-view > div > :nth-child(5), .feit-stagger > :nth-child(5) { --feit-i: 4; }
+.feit-view > div > :nth-child(6), .feit-stagger > :nth-child(6) { --feit-i: 5; }
+.feit-view > div > :nth-child(n + 7), .feit-stagger > :nth-child(n + 7) { --feit-i: 6; }
+.feit-stagger { --feit-base: 0ms; }
+
+/* While the opening screen is up, wait for it before revealing the page */
+.feit-splash ~ div { --feit-base: 1150ms; }
+.feit-splash ~ div .feit-stagger { --feit-base: 1250ms; }
+
+.feit-bar {
+  transform-origin: left center;
+  animation: feit-grow 900ms var(--ease-out-soft) both;
+  animation-delay: calc(var(--feit-base, 0ms) + 250ms);
+}
+
+.feit-pop { animation: feit-pop-kf 360ms var(--ease-spring); }
+.feit-icon-swap { animation: feit-spin-in 380ms var(--ease-spring); }
+.feit-toast { animation: feit-toast-in 380ms var(--ease-spring); }
+
+.feit-lift {
+  transition: transform 220ms var(--ease-out-soft), box-shadow 220ms var(--ease-out-soft), border-color 200ms ease, background-color 200ms ease;
+}
+@media (hover: hover) {
+  .feit-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 2px 4px color-mix(in oklab, var(--foreground) 6%, transparent), 0 18px 34px -18px color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+}
+
+.fittrack-nav-link { transition: color 180ms ease, background-color 180ms ease, transform 150ms ease; }
+.fittrack-nav-link:active { transform: scale(0.94); }
+.fittrack-nav-link.is-active svg:first-child { animation: feit-nav-bounce 420ms var(--ease-spring); }
+.fittrack-section-tab { transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease; }
+
+/* Opening screen */
+.feit-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: radial-gradient(circle at 50% 42%, var(--sidebar-accent), var(--sidebar) 62%);
+  color: var(--sidebar-foreground);
+  animation: feit-splash-out 450ms var(--ease-out-soft) 1000ms forwards;
+}
+
+@keyframes feit-splash-out {
+  to { opacity: 0; transform: scale(1.06); visibility: hidden; pointer-events: none; }
+}
+
+.feit-splash-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.9rem;
+}
+
+.feit-splash-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 24px;
+  animation: feit-logo-in 650ms var(--ease-spring) both;
+  box-shadow: 0 18px 50px -16px color-mix(in oklab, var(--sidebar-primary) 55%, transparent);
+}
+
+@keyframes feit-logo-in {
+  from { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  to { opacity: 1; transform: none; }
+}
+
+.feit-splash-ring {
+  position: absolute;
+  inset: -10px;
+  border: 2px solid var(--sidebar-primary);
+  border-radius: 32px;
+  opacity: 0;
+  animation: feit-ring 1000ms var(--ease-out-soft) 250ms;
+}
+
+@keyframes feit-ring {
+  0% { opacity: 0.9; transform: scale(0.85); }
+  100% { opacity: 0; transform: scale(1.45); }
+}
+
+.feit-splash-name {
+  display: flex;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.feit-splash-name span { animation: feit-rise 420ms var(--ease-spring) both; }
+
+.feit-splash-tagline {
+  font-size: 0.85rem;
+  color: color-mix(in oklab, var(--sidebar-foreground) 65%, transparent);
+  animation: feit-fade 400ms ease 650ms both;
+}
+
+.feit-splash-bar {
+  width: 120px;
+  height: 3px;
+  margin-top: 1.25rem;
+  border-radius: 999px;
+  background: var(--sidebar-primary);
+  transform-origin: left center;
+  animation: feit-grow 800ms var(--ease-out-soft) 200ms both;
+}
+
+/* Theme switch: circular reveal handled in script */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feit-splash { display: none; }
+  .feit-view > div > *, .feit-stagger > *, .feit-bar, .feit-pop, .feit-icon-swap, .feit-toast,
+  .fittrack-nav-link.is-active svg:first-child { animation: none !important; }
+  .feit-lift, .fittrack-nav-link { transition: none; }
+  .feit-lift:hover { transform: none; }
+}

@@ -59,7 +59,7 @@ export function WorkoutView({ data, today, updateData, setNotice }: { data: FitT
     <div><h1 className="text-3xl font-bold">Workouts</h1><p className="mt-1 text-muted-foreground">Pick a day to see what to do.</p></div>
     <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
       {week.map((d) => { const active = d === date;
-        return <button key={d} onClick={() => setPicked(d)} aria-label={`Select ${new Date(`${d}T12:00:00`).toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}`} aria-pressed={active} className={`min-w-0 rounded-xl border px-0.5 py-2.5 text-center transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted"}`}>
+        return <button key={d} onClick={() => setPicked(d)} aria-label={`Select ${new Date(`${d}T12:00:00`).toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}`} aria-pressed={active} className={`min-w-0 rounded-xl border px-0.5 py-2.5 text-center transition-all duration-200 active:scale-95 ${active ? "-translate-y-0.5 shadow-md " : ""}${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted"}`}>
           <span className={`text-sm font-semibold ${active ? "" : "text-muted-foreground"}`}>{new Date(`${d}T12:00:00`).toLocaleDateString("en", { weekday: "short" })}</span>
         </button>; })}
     </div>
@@ -72,12 +72,12 @@ export function WorkoutView({ data, today, updateData, setNotice }: { data: FitT
         {freeDays.length ? <div className="mt-3 flex flex-wrap gap-2">{freeDays.map((d) => <Button key={d} size="sm" variant="outline" onClick={() => window.confirm(`Move ${plan.type} to ${new Date(`${d}T12:00:00`).toLocaleDateString("en", { weekday: "long" })}?`) && move(date, d)}><ArrowRight />{new Date(`${d}T12:00:00`).toLocaleDateString("en", { weekday: "long" })}</Button>)}</div> : <p className="mt-1 text-sm text-muted-foreground">No free days left this week — that's okay, start fresh next week.</p>}</div>}
       {(movedFrom || moves[date]) && <Button size="sm" variant="ghost" className="mt-3" onClick={undo}>Undo move</Button>}
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div key={date} className="feit-stagger mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {plan.exercises.map((ex) => { const g = guide(ex); const src = g && img(g[1]); const [name, sets] = ex.split(" · "); const checked = done.includes(ex);
-          return <article key={ex} className={`overflow-hidden rounded-2xl border transition-colors ${checked ? "border-primary/40 bg-secondary/40" : "border-border"}`}>
+          return <article key={ex} className={`feit-lift overflow-hidden rounded-2xl border transition-colors ${checked ? "border-primary/40 bg-secondary/40" : "border-border"}`}>
             {src && <img src={src} alt={`How to do ${name}`} loading="lazy" width={496} height={496} className="aspect-[4/3] w-full object-cover" />}
             <div className="p-4"><div className="flex items-start justify-between gap-2"><div><h3 className="font-semibold">{name}</h3>{sets && <p className="text-sm text-primary">{sets}</p>}</div>
-              {isWorkout && <button aria-label={`Mark ${name} done`} onClick={() => save(checked ? done.filter((x) => x !== ex) : [...done, ex], entry?.coreDone ?? false)} className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${checked ? "border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground hover:bg-muted"}`}><Check size={16} /></button>}</div>
+              {isWorkout && <button aria-label={`Mark ${name} done`} onClick={() => save(checked ? done.filter((x) => x !== ex) : [...done, ex], entry?.coreDone ?? false)} className={`flex size-9 shrink-0 items-center justify-center rounded-full border transition-colors active:scale-90 ${checked ? "feit-pop border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground hover:bg-muted"}`}><Check size={16} /></button>}</div>
               {g && <p className="mt-2 text-sm text-muted-foreground">{g[2]}</p>}</div>
           </article>; })}
       </div>

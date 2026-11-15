@@ -8,7 +8,8 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import splashLogo from "@/assets/fittrack-logo.png";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -81,10 +82,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FitTrack" },
+      { title: "Feit" },
       { name: "description", content: "Personal fitness and learning tracker" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "FitTrack" },
+      { property: "og:title", content: "Feit" },
       { property: "og:description", content: "Personal fitness and learning tracker" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -124,9 +125,21 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [showSplash, setShowSplash] = useState(true);
 
   return (
     <QueryClientProvider client={queryClient}>
+      {showSplash && (
+        <div className="feit-splash" aria-hidden="true" onAnimationEnd={(event) => { if (event.target === event.currentTarget) setShowSplash(false); }}>
+          <div className="feit-splash-mark">
+            <span className="feit-splash-ring" />
+            <img src={splashLogo} alt="" width={96} height={96} className="feit-splash-logo" />
+          </div>
+          <p className="feit-splash-name">{"Feit".split("").map((letter, index) => <span key={index} style={{ animationDelay: `${380 + index * 70}ms` }}>{letter}</span>)}</p>
+          <p className="feit-splash-tagline">Small steps, strong habits</p>
+          <span className="feit-splash-bar" />
+        </div>
+      )}
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

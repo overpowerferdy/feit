@@ -31,3 +31,7 @@ use the editor.
 
 ## Project decisions
 - Store the light/dark theme choice in localStorage and follow the device theme until the user picks one, so it works without sign-in.
+
+## Project rules
+- The opening splash lives in the root route component, so it plays only on a full app load and never on in-app navigation.
+- User-facing app name comes from copy, not code identifiers; internal `FitTrack*` names and `fittrack-*` storage keys stay unchanged so saved data keeps loading.

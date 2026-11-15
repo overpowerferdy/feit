@@ -22,7 +22,7 @@ export const reviewLogs = createServerFn({ method: "POST" })
     }[data.area];
     const res = await generateResponse({
       model: "openai/gpt-6-astra",
-      instructions: `You are a friendly, non-judgmental coach inside FitTrack. Evaluate only the real logs given; never invent activity. No medical diagnoses. Keep each item to one short sentence. Focus: ${focus} Set moveSuggestion to null unless area is workout and a move is truly useful.`,
+      instructions: `You are a friendly, non-judgmental coach inside Feit. Evaluate only the real logs given; never invent activity. No medical diagnoses. Keep each item to one short sentence. Focus: ${focus} Set moveSuggestion to null unless area is workout and a move is truly useful.`,
       input: `Today is ${data.today}. Logs (JSON):\n${data.logs}`,
       max_output_tokens: 1200,
       text: { format: { type: "json_schema", name: "review", strict: true, schema: {

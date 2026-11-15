@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — FitTrack" }, { name: "description", content: "Sign in to get AI reviews of your FitTrack logs." }, { property: "og:title", content: "Sign in — FitTrack" }, { property: "og:description", content: "Sign in to get AI reviews of your FitTrack logs." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Feit" }, { name: "description", content: "Sign in to get AI reviews of your Feit logs." }, { property: "og:title", content: "Sign in — Feit" }, { property: "og:description", content: "Sign in to get AI reviews of your Feit logs." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AuthPage,
 });
 

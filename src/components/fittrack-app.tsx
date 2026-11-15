@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import logo from "@/assets/fittrack-logo.png";
 import { Link } from "@tanstack/react-router";
+import { flushSync } from "react-dom";
 import {
   Activity, ArrowDownToLine, ArrowUpFromLine, BookOpen, CalendarDays, Check, CheckCircle2,
   ChevronRight, Circle, Clock3, Dumbbell, Flame, Footprints, HeartPulse, Home,
@@ -73,12 +74,12 @@ function Empty({ children }: { children: ReactNode }) {
 }
 
 function Metric({ label, value, detail, icon: Icon, accent = false }: { label: string; value: string; detail: string; icon: typeof Activity; accent?: boolean }) {
-  return <Panel className="p-4 sm:p-5"><div className="flex items-start justify-between gap-2"><div><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div><span className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${accent ? "bg-accent text-accent-foreground" : "bg-secondary text-primary"}`}><Icon size={19} /></span></div></Panel>;
+  return <Panel className="feit-lift p-4 sm:p-5"><div className="flex items-start justify-between gap-2"><div><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div><span className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${accent ? "bg-accent text-accent-foreground" : "bg-secondary text-primary"}`}><Icon size={19} /></span></div></Panel>;
 }
 
 function TinyBar({ value, max, label }: { value: number; max: number; label: string }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
-  return <div><div className="mb-2 flex justify-between gap-2 text-sm"><span>{label}</span><span className="text-muted-foreground tabular-nums">{value} / {max}</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} /></div></div>;
+  return <div><div className="mb-2 flex justify-between gap-2 text-sm"><span>{label}</span><span className="text-muted-foreground tabular-nums">{value} / {max}</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className="feit-bar h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${pct}%` }} /></div></div>;
 }
 
 export function FitTrackApp({ view }: { view: View }) {
@@ -143,11 +144,25 @@ export function FitTrackApp({ view }: { view: View }) {
     setData((current) => updater(current));
   }
 
-  function toggleTheme() {
+  function toggleTheme(event: ReactMouseEvent<HTMLButtonElement>) {
     const nextIsDark = !darkMode;
-    window.localStorage.setItem("fittrack-theme", nextIsDark ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", nextIsDark);
-    setDarkMode(nextIsDark);
+    const apply = () => {
+      window.localStorage.setItem("fittrack-theme", nextIsDark ? "dark" : "light");
+      document.documentElement.classList.toggle("dark", nextIsDark);
+      setDarkMode(nextIsDark);
+    };
+    const doc = document as Document & { startViewTransition?: (callback: () => void) => { ready: Promise<void> } };
+    if (!doc.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { apply(); return; }
+    const x = event.clientX || window.innerWidth - 40;
+    const y = event.clientY || 40;
+    const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+    const transition = doc.startViewTransition(() => flushSync(apply));
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        { duration: 600, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)", pseudoElement: "::view-transition-new(root)" },
+      );
+    }).catch(() => undefined);
   }
 
   function toggleHabit(name: string) {
@@ -259,7 +274,7 @@ export function FitTrackApp({ view }: { view: View }) {
     if (!file) return;
     try {
       const parsed: unknown = JSON.parse(await file.text());
-      if (!isFitTrackData(parsed)) throw new Error("The file does not match FitTrack's backup format.");
+      if (!isFitTrackData(parsed)) throw new Error("The file does not match Feit's backup format.");
       setData(parsed);
       setNotice("Backup restored successfully.");
     } catch (error) {
@@ -280,7 +295,7 @@ export function FitTrackApp({ view }: { view: View }) {
   }
 
   function clearData() {
-    if (!window.confirm("Clear all FitTrack records saved on this device? This cannot be undone.")) return;
+    if (!window.confirm("Clear all Feit records saved on this device? This cannot be undone.")) return;
     const fresh = createEmptyData();
     setData(fresh);
     setNotice("Saved records cleared.");
@@ -295,14 +310,14 @@ export function FitTrackApp({ view }: { view: View }) {
   return (
     <div className="min-h-screen bg-background">
       <nav className="fittrack-rail" aria-label="Main navigation">
-        <div className="fittrack-brand"><img src={logo} alt="FitTrack logo" className="size-10 rounded-xl" /><div><p className="text-lg font-bold">FitTrack</p><p className="text-xs text-sidebar-foreground/65">Small steps, strong habits</p></div></div>
+        <div className="fittrack-brand"><img src={logo} alt="Feit logo" className="size-10 rounded-xl" /><div><p className="text-lg font-bold">Feit</p><p className="text-xs text-sidebar-foreground/65">Small steps, strong habits</p></div></div>
         <p className="fittrack-nav-heading">Your space</p>
         <div className="fittrack-nav-links">{links.map(({ view: itemView, label, to, icon: Icon, activeViews }) => { const active = activeViews.includes(view); return <Link key={itemView} to={to} aria-current={active ? "page" : undefined} className={`fittrack-nav-link ${active ? "is-active" : ""}`}><Icon size={20} strokeWidth={1.9} /><span>{label}</span>{active && <ChevronRight className="fittrack-nav-arrow" size={15} />}</Link>; })}</div>
         <div className="fittrack-rail-note"><div className="flex items-center gap-2 text-sm font-semibold"><Sparkles size={16} className="text-sidebar-primary" /> Your pace is enough</div><p className="mt-2 text-xs leading-relaxed text-sidebar-foreground/65">Keep showing up. Progress grows from the small things you repeat.</p></div>
       </nav>
       <main className="fittrack-main min-h-screen bg-background">
-        <div className="fittrack-content mx-auto max-w-[640px] px-4 py-5 sm:px-5 sm:py-7">
-          <div className="mb-2 flex justify-end"><Button type="button" variant="outline" size="sm" className="rounded-full" aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme}>{darkMode ? <Sun size={16} /> : <Moon size={16} />}{darkMode ? "Light" : "Dark"}</Button></div>
+        <div className="fittrack-content mx-auto max-w-[640px] px-4 py-5 sm:px-5 sm:py-7"><div key={view} className="feit-view">
+          <div className="mb-2 flex justify-end"><Button type="button" variant="outline" size="sm" className="rounded-full" aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme}><span key={darkMode ? "sun" : "moon"} className="feit-icon-swap inline-flex">{darkMode ? <Sun size={16} /> : <Moon size={16} />}</span>{darkMode ? "Light" : "Dark"}</Button></div>
           {(view === "workouts" || view === "progress") && <nav className="fittrack-section-tabs" aria-label="Training pages"><Link to="/workouts" aria-current={view === "workouts" ? "page" : undefined} className={`fittrack-section-tab ${view === "workouts" ? "is-active" : ""}`}><Dumbbell size={16} />Workout plan</Link><Link to="/progress" aria-current={view === "progress" ? "page" : undefined} className={`fittrack-section-tab ${view === "progress" ? "is-active" : ""}`}><TrendingUp size={16} />Strength & progress</Link></nav>}
           {(view === "learning" || view === "habits") && <nav className="fittrack-section-tabs" aria-label="Focus pages"><Link to="/learning" aria-current={view === "learning" ? "page" : undefined} className={`fittrack-section-tab ${view === "learning" ? "is-active" : ""}`}><BookOpen size={16} />Learning</Link><Link to="/habits" aria-current={view === "habits" ? "page" : undefined} className={`fittrack-section-tab ${view === "habits" ? "is-active" : ""}`}><CheckCircle2 size={16} />Daily routine</Link></nav>}
           {view === "home" && <HomeView {...{ data, today, selectedDay, todayWorkout, todayProtein, todayCoding, todaySleep, habitToday, stats, readingPct, weekSpending, toggleHabit, toggleExercise, toggleCore }} />}
@@ -312,9 +327,9 @@ export function FitTrackApp({ view }: { view: View }) {
           {view === "learning" && <LearningView {...{ data, today, todayCoding, stats, readingPct, addCoding, addReading, updateData }} />}
           {view === "habits" && <HabitsView {...{ today, habitToday, toggleHabit }} />}
           {view === "backup" && <DataTools {...{ importRef, importData, exportData, clearData }} />}
-        </div>
+        </div></div>
       </main>
-      {notice && <div role="status" className="fixed bottom-5 right-5 z-50 flex max-w-sm items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm shadow-lg"><span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-primary"><Check size={16} /></span>{notice}<Button variant="ghost" size="icon" className="ml-auto size-7" onClick={() => setNotice("")} aria-label="Dismiss"><X size={15} /></Button></div>}
+      {notice && <div role="status" className="feit-toast fixed bottom-5 right-5 z-50 flex max-w-sm items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm shadow-lg"><span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-primary"><Check size={16} /></span>{notice}<Button variant="ghost" size="icon" className="ml-auto size-7" onClick={() => setNotice("")} aria-label="Dismiss"><X size={15} /></Button></div>}
     </div>
   );
 }
@@ -330,7 +345,7 @@ function HomeView(props: {
     <Panel className="overflow-hidden"><div className="grid md:grid-cols-[1fr_auto] md:items-center"><div className="p-5 sm:p-7"><p className="text-xs font-semibold uppercase text-primary">{today ? new Date(`${today}T12:00:00`).toLocaleDateString("en", { weekday: "long" }) : "Today"} · {selectedDay.type}</p><h2 className="mt-2 text-2xl font-semibold">{selectedDay.title}</h2><p className="mt-2 max-w-xl text-sm text-muted-foreground">{selectedDay.type.startsWith("Workout") ? "Keep your reps controlled and finish with 1–3 good reps left. Stop if anything feels sharply painful." : selectedDay.type === "Recovery" ? "An easy walk and a little mobility are plenty for today." : "Recovery is part of getting stronger. Take a moment to notice what improved this week."}</p><div className="mt-5 flex flex-wrap gap-2"><span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.5 text-xs font-medium text-secondary-foreground"><Clock3 size={14} />4:00 PM</span><span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 text-xs text-muted-foreground"><CalendarDays size={14} />{stats.weeklyWorkouts} / 3 workouts this week</span></div></div><div className="flex min-h-32 items-center justify-center border-t border-border bg-accent/40 p-6 md:min-h-full md:border-l md:border-t-0"><div className="flex size-20 items-center justify-center rounded-full bg-card text-primary shadow-sm"><Dumbbell size={34} /></div></div></div></Panel>
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Body weight" value={`${latestWeight ?? 60} kg`} detail={latestWeight ? "Latest saved entry" : "Starting estimate · 60 kg"} icon={Scale} /><Metric label="Last night's sleep" value={todaySleep ? minutesLabel(todaySleep.minutes) : "—"} detail="Target · 8 hours" icon={Moon} /><Metric label="Protein estimate" value={`${todayProtein} g`} detail="Based on meals logged today" icon={Utensils} accent /><Metric label="Coding today" value={minutesLabel(todayCoding)} detail="Daily aim · about 4 hours" icon={Activity} /></div>
     <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]"><Panel className="p-5 sm:p-6"><PanelTitle eyebrow="Your week" title="Keep the rhythm" action={<span className="rounded-md bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground">{stats.weeklyWorkouts} / 3 sessions</span>} /><div className="grid gap-5 sm:grid-cols-2"><TinyBar value={stats.weeklyWorkouts} max={3} label="Workouts completed" /><TinyBar value={Math.min(stats.lastSeven, 240)} max={240} label={`Coding · ${minutesLabel(stats.lastSeven)} this week`} /><TinyBar value={readingPct} max={100} label={`Atomic Habits · ${readingPct}% complete`} /><TinyBar value={weekSpending} max={WEEKLY_FOOD_LIMIT} label={`Extra food · ₱${weekSpending} of ₱${WEEKLY_FOOD_LIMIT}`} /></div></Panel>
-      <Panel className="p-5 sm:p-6"><PanelTitle eyebrow="One day at a time" title="Daily check-in" action={<span className="text-xs text-muted-foreground">{habitToday.length} / {habits.length}</span>} /><div className="grid gap-1 sm:grid-cols-2">{habits.map((habit) => <button key={habit} type="button" onClick={() => toggleHabit(habit)} className="flex min-h-10 items-center gap-2 rounded-md px-2 text-left text-sm transition-colors hover:bg-muted"><span className={`flex size-5 shrink-0 items-center justify-center rounded-full border ${habitToday.includes(habit) ? "border-primary bg-primary text-primary-foreground" : "border-input text-transparent"}`}><Check size={13} /></span><span className={habitToday.includes(habit) ? "text-muted-foreground line-through" : ""}>{habit}</span></button>)}</div><Link to="/habits" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">View routine <ChevronRight size={15} /></Link></Panel></div>
+      <Panel className="p-5 sm:p-6"><PanelTitle eyebrow="One day at a time" title="Daily check-in" action={<span className="text-xs text-muted-foreground">{habitToday.length} / {habits.length}</span>} /><div className="grid gap-1 sm:grid-cols-2">{habits.map((habit) => <button key={habit} type="button" onClick={() => toggleHabit(habit)} className="flex min-h-10 items-center gap-2 rounded-md px-2 text-left text-sm transition-colors hover:bg-muted"><span className={`flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors ${habitToday.includes(habit) ? "feit-pop border-primary bg-primary text-primary-foreground" : "border-input text-transparent"}`}><Check size={13} /></span><span className={habitToday.includes(habit) ? "text-muted-foreground line-through" : ""}>{habit}</span></button>)}</div><Link to="/habits" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">View routine <ChevronRight size={15} /></Link></Panel></div>
     <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]"><Panel className="p-5 sm:p-6"><PanelTitle eyebrow="A gentle reminder" title="Your starting point" /><div className="grid gap-3 sm:grid-cols-3">{[["Push-ups", "20–25 reps"], ["Pull-ups", "5 reps"], ["Chin-ups", "8 reps"]].map(([name, value]) => <div key={name} className="rounded-md bg-muted/70 p-3"><p className="text-sm text-muted-foreground">{name}</p><p className="mt-1 font-semibold">{value}</p></div>)}</div><p className="mt-4 text-sm leading-relaxed text-muted-foreground">Focus on gradual improvements, not daily max tests. Squats, deadlifts, pull-ups, and chin-ups also ask your core to work.</p></Panel><Panel className="p-5 sm:p-6"><PanelTitle eyebrow="Keep it simple" title="Your setup" /><div className="grid gap-3 text-sm"><div className="flex items-start gap-3"><ShieldCheck size={17} className="mt-0.5 text-primary" /><span>Age 21 · 165 cm · estimated 60 kg · intermediate</span></div><div className="flex items-start gap-3"><Dumbbell size={17} className="mt-0.5 text-primary" /><span>Pull-up bar and adjustable dumbbells · 20 kg total</span></div><div className="flex items-start gap-3"><Target size={17} className="mt-0.5 text-primary" /><span>Build strength, core control, and consistency through May 2027 and beyond.</span></div></div></Panel></div>
   </div>;
 }
