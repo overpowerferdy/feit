@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HabitsRouteImport } from './routes/habits'
 import { Route as LearningRouteImport } from './routes/learning'
 import { Route as ProgressRouteImport } from './routes/progress'
@@ -19,6 +20,11 @@ import { Route as WorkoutsRouteImport } from './routes/workouts'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HabitsRoute = HabitsRouteImport.update({
@@ -49,6 +55,7 @@ const WorkoutsRoute = WorkoutsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/habits': typeof HabitsRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/habits': typeof HabitsRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/habits': typeof HabitsRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
@@ -75,12 +84,26 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/habits' | '/learning' | '/progress' | '/wellness' | '/workouts'
+    | '/'
+    | '/auth'
+    | '/habits'
+    | '/learning'
+    | '/progress'
+    | '/wellness'
+    | '/workouts'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/habits' | '/learning' | '/progress' | '/wellness' | '/workouts'
+  to:
+    | '/'
+    | '/auth'
+    | '/habits'
+    | '/learning'
+    | '/progress'
+    | '/wellness'
+    | '/workouts'
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/habits'
     | '/learning'
     | '/progress'
@@ -90,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   HabitsRoute: typeof HabitsRoute
   LearningRoute: typeof LearningRoute
   ProgressRoute: typeof ProgressRoute
@@ -104,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/habits': {
@@ -146,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   HabitsRoute: HabitsRoute,
   LearningRoute: LearningRoute,
   ProgressRoute: ProgressRoute,
