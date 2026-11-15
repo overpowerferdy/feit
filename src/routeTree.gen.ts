@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BackupRouteImport } from './routes/backup'
 import { Route as HabitsRouteImport } from './routes/habits'
 import { Route as LearningRouteImport } from './routes/learning'
 import { Route as ProgressRouteImport } from './routes/progress'
@@ -25,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BackupRoute = BackupRouteImport.update({
+  id: '/backup',
+  path: '/backup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HabitsRoute = HabitsRouteImport.update({
@@ -56,6 +62,7 @@ const WorkoutsRoute = WorkoutsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/backup': typeof BackupRoute
   '/habits': typeof HabitsRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/backup': typeof BackupRoute
   '/habits': typeof HabitsRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/backup': typeof BackupRoute
   '/habits': typeof HabitsRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/backup'
     | '/habits'
     | '/learning'
     | '/progress'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/backup'
     | '/habits'
     | '/learning'
     | '/progress'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/backup'
     | '/habits'
     | '/learning'
     | '/progress'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  BackupRoute: typeof BackupRoute
   HabitsRoute: typeof HabitsRoute
   LearningRoute: typeof LearningRoute
   ProgressRoute: typeof ProgressRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/backup': {
+      id: '/backup'
+      path: '/backup'
+      fullPath: '/backup'
+      preLoaderRoute: typeof BackupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/habits': {
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  BackupRoute: BackupRoute,
   HabitsRoute: HabitsRoute,
   LearningRoute: LearningRoute,
   ProgressRoute: ProgressRoute,
