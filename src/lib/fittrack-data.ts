@@ -75,10 +75,11 @@ export function canRescheduleWorkout(originalDate: string, targetDate: string, t
   return originalDate < today && targetDate > today && mondayOf(originalDate) === mondayOf(targetDate) && mondayOf(targetDate) === mondayOf(today);
 }
 
-export function workoutForDate(date: string, reschedules: Record<string, string> = {}) {
+type DayPlan = { day: string; title: string; type: string; exercises: string[] };
+export function workoutForDate(date: string, reschedules: Record<string, string> = {}): DayPlan {
   const weekdayIndex = (new Date(`${date}T12:00:00`).getDay() + 6) % 7;
   const regularDay = workoutSchedule[weekdayIndex] ?? workoutSchedule[0];
-  if (!regularDay) return workoutSchedule[0];
+  if (!regularDay) return workoutSchedule[0]!;
 
   const movedFrom = Object.entries(reschedules).find(([, target]) => target === date)?.[0];
   if (movedFrom) {
