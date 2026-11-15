@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { Link } from "@tanstack/react-router";
 import {
   Activity, ArrowDownToLine, ArrowUpFromLine, BookOpen, CalendarDays, Check, CheckCircle2,
-  ChevronRight, Circle, Clock3, Dumbbell, Flame, Footprints, HeartPulse, Home, Menu,
-  Moon, MoreHorizontal, Plus, Scale, ShieldCheck, Sparkles, Target, Trash2, TrendingUp,
+  ChevronRight, Circle, Clock3, Dumbbell, Flame, Footprints, HeartPulse, Home,
+  Moon, Plus, Scale, ShieldCheck, Sparkles, Target, Trash2, TrendingUp,
   Utensils, Weight, X,
 } from "lucide-react";
 import {
@@ -19,15 +19,14 @@ import {
 import { WorkoutView as NewWorkoutView } from "@/components/workout-view";
 import { CoachPanel } from "@/components/coach-panel";
 
-type View = "home" | "workouts" | "progress" | "wellness" | "learning" | "habits";
+type View = "home" | "workouts" | "progress" | "wellness" | "learning" | "habits" | "backup";
 
-const links: { view: View; label: string; to: string; icon: typeof Home }[] = [
-  { view: "home", label: "Overview", to: "/", icon: Home },
-  { view: "workouts", label: "Workouts", to: "/workouts", icon: Dumbbell },
-  { view: "progress", label: "Progress", to: "/progress", icon: TrendingUp },
-  { view: "wellness", label: "Wellness", to: "/wellness", icon: HeartPulse },
-  { view: "learning", label: "Learning", to: "/learning", icon: BookOpen },
-  { view: "habits", label: "Daily habits", to: "/habits", icon: CheckCircle2 },
+const links: { view: View; label: string; to: string; icon: typeof Home; activeViews: View[] }[] = [
+  { view: "home", label: "Today", to: "/", icon: Home, activeViews: ["home"] },
+  { view: "workouts", label: "Train", to: "/workouts", icon: Dumbbell, activeViews: ["workouts", "progress"] },
+  { view: "wellness", label: "Body", to: "/wellness", icon: HeartPulse, activeViews: ["wellness"] },
+  { view: "learning", label: "Focus", to: "/learning", icon: BookOpen, activeViews: ["learning", "habits"] },
+  { view: "backup", label: "Backup", to: "/backup", icon: ArrowDownToLine, activeViews: ["backup"] },
 ];
 
 const routine = [
@@ -57,7 +56,7 @@ function newId() {
 }
 
 function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-lg border border-border bg-card ${className}`}>{children}</section>;
+  return <section className={`fittrack-panel rounded-lg border border-border bg-card ${className}`}>{children}</section>;
 }
 
 function PanelTitle({ eyebrow, title, action }: { eyebrow?: string; title: string; action?: ReactNode }) {
@@ -85,7 +84,6 @@ export function FitTrackApp({ view }: { view: View }) {
   const [data, setData] = useState<FitTrackData>(() => createEmptyData());
   const [today, setToday] = useState("");
   const [hydrated, setHydrated] = useState(false);
-  const [mobileNav, setMobileNav] = useState(false);
   const [notice, setNotice] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
 
@@ -125,7 +123,6 @@ export function FitTrackApp({ view }: { view: View }) {
   const todaySleep = today ? data.sleep.find((entry) => entry.date === today) : undefined;
   const weekSpending = today ? weeklySpending(data.purchases, today) : 0;
   const readingPct = Math.min(100, Math.round((data.readingPage / Math.max(1, data.bookPages)) * 100));
-  const title = links.find((item) => item.view === view)?.label ?? "Overview";
 
   function updateData(updater: (current: FitTrackData) => FitTrackData) {
     setData((current) => updater(current));
@@ -275,23 +272,23 @@ export function FitTrackApp({ view }: { view: View }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar px-4 py-5 text-sidebar-foreground transition-transform lg:translate-x-0 ${mobileNav ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex items-center gap-3 px-3 pb-8 pt-1"><span className="flex size-10 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><Activity size={22} /></span><div><p className="text-lg font-bold">FitTrack</p><p className="text-xs text-sidebar-foreground/65">Small steps, strong habits</p></div><Button variant="ghost" size="icon" className="ml-auto text-sidebar-foreground lg:hidden" onClick={() => setMobileNav(false)} aria-label="Close menu"><X /></Button></div>
-        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/55">Your space</p>
-        <nav className="grid gap-1" aria-label="Main navigation">{links.map(({ view: itemView, label, to, icon: Icon }) => <Link key={itemView} to={to} onClick={() => setMobileNav(false)} className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${view === itemView ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}><Icon size={18} />{label}{view === itemView && <ChevronRight size={15} className="ml-auto" />}</Link>)}</nav>
-        <div className="mt-auto rounded-lg border border-sidebar-border bg-sidebar-accent/40 p-4"><div className="flex items-center gap-2 text-sm font-semibold"><Sparkles size={16} className="text-sidebar-primary" /> Your pace is enough</div><p className="mt-2 text-xs leading-relaxed text-sidebar-foreground/65">Keep showing up. Progress grows from the small things you repeat.</p></div>
-      </aside>
-      {mobileNav && <button className="fixed inset-0 z-30 bg-foreground/30 lg:hidden" onClick={() => setMobileNav(false)} aria-label="Close navigation" />}
-      <main className="min-h-screen lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-7"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu /></Button><span className="text-sm text-muted-foreground">FitTrack <span className="mx-2">/</span><span className="font-medium text-foreground">{title}</span></span></div><div className="flex items-center gap-2 text-sm text-muted-foreground"><span className="hidden sm:inline">{today ? new Date(`${today}T12:00:00`).toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric" }) : "Your day"}</span><span className="flex size-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-primary">FT</span></div></div></header>
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-7 sm:py-8">
+      <nav className="fittrack-rail" aria-label="Main navigation">
+        <div className="fittrack-brand"><span className="flex size-10 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground"><Activity size={22} /></span><div><p className="text-lg font-bold">FitTrack</p><p className="text-xs text-sidebar-foreground/65">Small steps, strong habits</p></div></div>
+        <p className="fittrack-nav-heading">Your space</p>
+        <div className="fittrack-nav-links">{links.map(({ view: itemView, label, to, icon: Icon, activeViews }) => { const active = activeViews.includes(view); return <Link key={itemView} to={to} aria-current={active ? "page" : undefined} className={`fittrack-nav-link ${active ? "is-active" : ""}`}><Icon size={20} strokeWidth={1.9} /><span>{label}</span>{active && <ChevronRight className="fittrack-nav-arrow" size={15} />}</Link>; })}</div>
+        <div className="fittrack-rail-note"><div className="flex items-center gap-2 text-sm font-semibold"><Sparkles size={16} className="text-sidebar-primary" /> Your pace is enough</div><p className="mt-2 text-xs leading-relaxed text-sidebar-foreground/65">Keep showing up. Progress grows from the small things you repeat.</p></div>
+      </nav>
+      <main className="fittrack-main min-h-screen bg-background">
+        <div className="fittrack-content mx-auto max-w-[640px] px-4 py-5 sm:px-5 sm:py-7">
+          {(view === "workouts" || view === "progress") && <nav className="fittrack-section-tabs" aria-label="Training pages"><Link to="/workouts" aria-current={view === "workouts" ? "page" : undefined} className={`fittrack-section-tab ${view === "workouts" ? "is-active" : ""}`}><Dumbbell size={16} />Workout plan</Link><Link to="/progress" aria-current={view === "progress" ? "page" : undefined} className={`fittrack-section-tab ${view === "progress" ? "is-active" : ""}`}><TrendingUp size={16} />Strength & progress</Link></nav>}
+          {(view === "learning" || view === "habits") && <nav className="fittrack-section-tabs" aria-label="Focus pages"><Link to="/learning" aria-current={view === "learning" ? "page" : undefined} className={`fittrack-section-tab ${view === "learning" ? "is-active" : ""}`}><BookOpen size={16} />Learning</Link><Link to="/habits" aria-current={view === "habits" ? "page" : undefined} className={`fittrack-section-tab ${view === "habits" ? "is-active" : ""}`}><CheckCircle2 size={16} />Daily routine</Link></nav>}
           {view === "home" && <HomeView {...{ data, today, selectedDay, todayWorkout, todayProtein, todayCoding, todaySleep, habitToday, stats, readingPct, weekSpending, toggleHabit, toggleExercise, toggleCore }} />}
           {view === "workouts" && <NewWorkoutView {...{ data, today, updateData, setNotice }} />}
           {view === "progress" && <ProgressView {...{ data, today, addStrength, addWeight }} />}
           {view === "wellness" && <WellnessView {...{ data, today, todayMeals, todayProtein, todaySleep, weekSpending, addSleep, addMeal, addPurchase }} />}
           {view === "learning" && <LearningView {...{ data, today, todayCoding, stats, readingPct, addCoding, addReading, updateData }} />}
           {view === "habits" && <HabitsView {...{ today, habitToday, toggleHabit }} />}
-          {view === "home" && <DataTools {...{ importRef, importData, exportData, clearData }} />}
+          {view === "backup" && <DataTools {...{ importRef, importData, exportData, clearData }} />}
         </div>
       </main>
       {notice && <div role="status" className="fixed bottom-5 right-5 z-50 flex max-w-sm items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm shadow-lg"><span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-primary"><Check size={16} /></span>{notice}<Button variant="ghost" size="icon" className="ml-auto size-7" onClick={() => setNotice("")} aria-label="Dismiss"><X size={15} /></Button></div>}
