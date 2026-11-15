@@ -22,6 +22,7 @@ export interface FitTrackData {
   bookPages: number;
   readingNotes: string;
   roadmap: Record<string, string[]>;
+  rescheduledWorkouts?: Record<string, string>;
 }
 
 export const STORAGE_KEY = "fittrack-data-v1";
@@ -68,6 +69,30 @@ export function mondayOf(dateString: string) {
   const weekday = date.getDay();
   date.setDate(date.getDate() - ((weekday + 6) % 7));
   return date.toISOString().slice(0, 10);
+}
+
+export function canRescheduleWorkout(originalDate: string, targetDate: string, today: string) {
+  return originalDate < today && targetDate > today && mondayOf(originalDate) === mondayOf(targetDate) && mondayOf(targetDate) === mondayOf(today);
+}
+
+export function workoutForDate(date: string, reschedules: Record<string, string> = {}) {
+  const weekdayIndex = (new Date(`${date}T12:00:00`).getDay() + 6) % 7;
+  const regularDay = workoutSchedule[weekdayIndex] ?? workoutSchedule[0];
+  if (!regularDay) return workoutSchedule[0];
+
+  const movedFrom = Object.entries(reschedules).find(([, target]) => target === date)?.[0];
+  if (movedFrom) {
+    const sourceIndex = (new Date(`${movedFrom}T12:00:00`).getDay() + 6) % 7;
+    return workoutSchedule[sourceIndex] ?? regularDay;
+  }
+
+  if (reschedules[date]) {
+    const targetDate = reschedules[date];
+    const targetLabel = targetDate ? new Date(`${targetDate}T12:00:00`).toLocaleDateString("en", { weekday: "long" }) : "another day";
+    return { ...regularDay, title: `Workout moved to ${targetLabel}`, type: "Moved", exercises: ["This session is on its new day."] };
+  }
+
+  return regularDay;
 }
 
 export function weeklySpending(entries: PurchaseEntry[], date: string) {
