@@ -77,7 +77,7 @@ export function WorkoutView({ data, today, updateData, setNotice }: { data: FitT
       <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {plan.exercises.map((ex) => { const g = guide(ex); const src = g && img(g[1]); const [name, sets] = ex.split(" · "); const checked = done.includes(ex);
           return <article key={ex} className={`overflow-hidden rounded-2xl border transition-colors ${checked ? "border-primary/40 bg-secondary/40" : "border-border"}`}>
-            {src && <img src={src} alt={`How to do ${name}`} loading="lazy" width={496} height={496} className="aspect-[4/3] w-full bg-muted object-contain" />}
+            {src && <img src={src} alt={`How to do ${name}`} loading="lazy" width={496} height={496} className="aspect-[4/3] w-full object-cover" />}
             <div className="p-4"><div className="flex items-start justify-between gap-2"><div><h3 className="font-semibold">{name}</h3>{sets && <p className="text-sm text-primary">{sets}</p>}</div>
               {isWorkout && <button aria-label={`Mark ${name} done`} onClick={() => save(checked ? done.filter((x) => x !== ex) : [...done, ex], entry?.coreDone ?? false)} className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${checked ? "border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground hover:bg-muted"}`}><Check size={16} /></button>}</div>
               {g && <p className="mt-2 text-sm text-muted-foreground">{g[2]}</p>}</div>
