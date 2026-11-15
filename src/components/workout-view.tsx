@@ -57,12 +57,10 @@ export function WorkoutView({ data, today, updateData, setNotice }: { data: FitT
 
   return <div className="space-y-6">
     <div><h1 className="text-3xl font-bold">Workouts</h1><p className="mt-1 text-muted-foreground">Pick a day to see what to do.</p></div>
-    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-7 sm:px-0">
-      {week.map((d) => { const p = workoutForDate(d, moves); const active = d === date; const fin = data.workouts.some((w) => w.date === d && w.completed.length > 0);
-        return <button key={d} onClick={() => setPicked(d)} className={`min-w-[78px] rounded-2xl border p-3 text-left transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted"}`}>
-          <p className={`text-xs ${active ? "opacity-80" : "text-muted-foreground"}`}>{new Date(`${d}T12:00:00`).toLocaleDateString("en", { weekday: "short" })}{d === today ? " · Today" : ""}</p>
-          <p className="mt-1 text-sm font-semibold">{p.type.replace("Workout ", "")}</p>
-          {fin && <Check size={14} className="mt-1" />}
+    <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+      {week.map((d) => { const active = d === date;
+        return <button key={d} onClick={() => setPicked(d)} aria-label={`Select ${new Date(`${d}T12:00:00`).toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}`} aria-pressed={active} className={`min-w-0 rounded-xl border px-0.5 py-2.5 text-center transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted"}`}>
+          <span className={`text-sm font-semibold ${active ? "" : "text-muted-foreground"}`}>{new Date(`${d}T12:00:00`).toLocaleDateString("en", { weekday: "short" })}</span>
         </button>; })}
     </div>
 

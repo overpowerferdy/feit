@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import {
   Activity, ArrowDownToLine, ArrowUpFromLine, BookOpen, CalendarDays, Check, CheckCircle2,
   ChevronRight, Circle, Clock3, Dumbbell, Flame, Footprints, HeartPulse, Home,
-  Moon, Plus, Scale, ShieldCheck, Sparkles, Target, Trash2, TrendingUp,
+  Moon, Plus, Scale, ShieldCheck, Sparkles, Sun, Target, Trash2, TrendingUp,
   Utensils, Weight, X,
 } from "lucide-react";
 import {
@@ -84,6 +84,7 @@ export function FitTrackApp({ view }: { view: View }) {
   const [data, setData] = useState<FitTrackData>(() => createEmptyData());
   const [today, setToday] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [notice, setNotice] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
 
@@ -99,6 +100,19 @@ export function FitTrackApp({ view }: { view: View }) {
       setNotice("Saved data could not be read; a fresh tracker is ready.");
     }
     setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const applyTheme = () => {
+      const savedTheme = window.localStorage.getItem("fittrack-theme");
+      const isDark = savedTheme ? savedTheme === "dark" : media.matches;
+      document.documentElement.classList.toggle("dark", isDark);
+      setDarkMode(isDark);
+    };
+    applyTheme();
+    media.addEventListener("change", applyTheme);
+    return () => media.removeEventListener("change", applyTheme);
   }, []);
 
   useEffect(() => {
@@ -126,6 +140,13 @@ export function FitTrackApp({ view }: { view: View }) {
 
   function updateData(updater: (current: FitTrackData) => FitTrackData) {
     setData((current) => updater(current));
+  }
+
+  function toggleTheme() {
+    const nextIsDark = !darkMode;
+    window.localStorage.setItem("fittrack-theme", nextIsDark ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", nextIsDark);
+    setDarkMode(nextIsDark);
   }
 
   function toggleHabit(name: string) {
@@ -280,6 +301,7 @@ export function FitTrackApp({ view }: { view: View }) {
       </nav>
       <main className="fittrack-main min-h-screen bg-background">
         <div className="fittrack-content mx-auto max-w-[640px] px-4 py-5 sm:px-5 sm:py-7">
+          <div className="mb-2 flex justify-end"><Button type="button" variant="outline" size="sm" className="rounded-full" aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme}>{darkMode ? <Sun size={16} /> : <Moon size={16} />}{darkMode ? "Light" : "Dark"}</Button></div>
           {(view === "workouts" || view === "progress") && <nav className="fittrack-section-tabs" aria-label="Training pages"><Link to="/workouts" aria-current={view === "workouts" ? "page" : undefined} className={`fittrack-section-tab ${view === "workouts" ? "is-active" : ""}`}><Dumbbell size={16} />Workout plan</Link><Link to="/progress" aria-current={view === "progress" ? "page" : undefined} className={`fittrack-section-tab ${view === "progress" ? "is-active" : ""}`}><TrendingUp size={16} />Strength & progress</Link></nav>}
           {(view === "learning" || view === "habits") && <nav className="fittrack-section-tabs" aria-label="Focus pages"><Link to="/learning" aria-current={view === "learning" ? "page" : undefined} className={`fittrack-section-tab ${view === "learning" ? "is-active" : ""}`}><BookOpen size={16} />Learning</Link><Link to="/habits" aria-current={view === "habits" ? "page" : undefined} className={`fittrack-section-tab ${view === "habits" ? "is-active" : ""}`}><CheckCircle2 size={16} />Daily routine</Link></nav>}
           {view === "home" && <HomeView {...{ data, today, selectedDay, todayWorkout, todayProtein, todayCoding, todaySleep, habitToday, stats, readingPct, weekSpending, toggleHabit, toggleExercise, toggleCore }} />}
