@@ -35,17 +35,17 @@ function Roadmap() {
         <CardTitle icon={GraduationCap} title="Programming roadmap" hint="Nov 16–22, 2026 · an intro week, not a test of mastery" />
         <ProgressBar label="Topics finished" value={finished} max={total} right={`${finished} / ${total}`} />
       </Card>
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {roadmapDays.map((day) => {
           const done = day.topics.filter((t) => topicFinished(data.learn.topics[topicKey(day.date, t)])).length;
           const project = data.learn.projects[day.date];
           const isToday = day.date === today;
           return (
-            <Link key={day.date} to="/learn/$day" params={{ day: day.date }} className={`feit-lift flex items-center gap-4 rounded-2xl border bg-card p-4 ${isToday ? "border-primary" : "border-border"}`}>
+            <Link key={day.date} to="/learn/$day" params={{ day: day.date }} className={`feit-lift flex min-w-0 items-center gap-3 rounded-2xl border bg-card p-3.5 sm:gap-4 sm:p-4 ${isToday ? "border-primary" : "border-border"}`}>
               <div className="flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-secondary text-secondary-foreground"><span className="text-[0.65rem] font-bold uppercase">{fmtDate(day.date, { weekday: "short" })}</span><span className="text-lg font-extrabold leading-none">{day.date.slice(8)}</span></div>
               <div className="min-w-0 flex-1">
-                <p className="font-bold">{day.title}{isToday && <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[0.65rem] font-bold uppercase text-accent-foreground">Today</span>}</p>
-                <p className="truncate text-xs text-muted-foreground">{day.topics.join(" · ")}</p>
+                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-bold leading-snug"><span className="min-w-0 break-words">{day.title}</span>{isToday && <span className="rounded-full bg-accent px-2 py-0.5 text-[0.65rem] font-bold uppercase text-accent-foreground">Today</span>}</p>
+                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{day.topics.join(" · ")}</p>
                 <div className="mt-2 flex items-center gap-2"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.round((done / day.topics.length) * 100)}%` }} /></div><span className="text-xs tabular-nums text-muted-foreground">{done}/{day.topics.length}</span>{project?.review?.passed && <Trophy size={14} className="text-primary" />}</div>
               </div>
               <ChevronRight size={18} className="shrink-0 text-muted-foreground" />

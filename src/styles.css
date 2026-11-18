@@ -279,34 +279,54 @@
 }
 
 .feit-segmented {
+  position: sticky;
+  top: calc(3.75rem + env(safe-area-inset-top, 0px));
+  z-index: 20;
   display: flex;
   gap: 0.25rem;
-  overflow-x: auto;
   border-radius: 1rem;
-  background: var(--muted);
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--muted) 92%, var(--background));
+  backdrop-filter: blur(12px);
   padding: 0.3rem;
-  scrollbar-width: none;
+  box-shadow: 0 8px 20px -14px color-mix(in oklab, var(--foreground) 40%, transparent);
 }
-.feit-segmented::-webkit-scrollbar { display: none; }
+@media (min-width: 1024px) {
+  .feit-segmented { top: 0.75rem; }
+}
 
 .feit-segment {
   display: inline-flex;
-  min-height: 42px;
-  flex: 1 0 auto;
+  min-width: 0;
+  min-height: 44px;
+  flex: 1 1 0;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
   border-radius: 0.75rem;
-  padding: 0.45rem 0.8rem;
+  padding: 0.45rem 0.6rem;
   color: var(--muted-foreground);
   font-size: 0.85rem;
   font-weight: 700;
+  white-space: nowrap;
   transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
 }
+.feit-segment svg { flex-shrink: 0; }
+.feit-segment:hover { color: var(--foreground); }
 .feit-segment.is-active {
-  background: var(--card);
-  color: var(--foreground);
-  box-shadow: 0 1px 3px color-mix(in oklab, var(--foreground) 14%, transparent);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 2px 8px -2px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+/* Small phones: icon above the label so every tab fits without scrolling */
+@media (max-width: 479px) {
+  .feit-segment {
+    flex-direction: column;
+    gap: 0.15rem;
+    min-height: 52px;
+    padding: 0.4rem 0.25rem;
+    font-size: 0.72rem;
+  }
 }
 
 /* Routine timeline */
