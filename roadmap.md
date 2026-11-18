@@ -8,20 +8,20 @@
 - [x] Workout day buttons: weekday names only
 - [x] Dark mode matching uploaded HTML
 - [x] Answer: good next step after remix (third time)
-- [ ] New Feit logo (app icon, favicon, sidebar, splash)
-- [ ] Steps tracker with km
-- [ ] Progress photo after a workout day
-- [ ] YouTube tutorial video inside each exercise card
-- [ ] Core finisher: Dead Bugs → Knee Tucks
-- [ ] Body weight with 2 decimals
-- [ ] Routine reminders as phone/laptop push notifications (even when closed)
-- [ ] Roadmap: learn in-app (lessons, quizzes, problems), final build task with no paste, AI grading
-- [ ] Delete any log entry
-- [ ] Clearer log forms (sleep: which day/time you slept and woke)
-- [ ] Daily journal
-- [ ] Daily routine always visible
-- [ ] Settings page with theme toggle
-- [ ] Move or skip an unfinished routine item to a date/time
-- [ ] Fix AI coach not working
-- [ ] Redesign layout: friendlier, simpler, modern
-- [ ] Answer: good next step after remix (fourth time)
+- [x] New Feit logo (app icon, favicon, sidebar, splash)
+- [x] Steps tracker with km
+- [x] Progress photo after a workout day
+- [x] YouTube tutorial video inside each exercise card
+- [x] Core finisher: Dead Bugs → Knee Tucks
+- [x] Body weight with 2 decimals
+- [x] Routine reminders as phone/laptop push notifications (even when closed)
+- [x] Roadmap: learn in-app (lessons, quizzes, problems), final build task with no paste, AI grading
+- [x] Delete any log entry
+- [x] Clearer log forms (sleep: which day/time you slept and woke)
+- [x] Daily journal
+- [x] Daily routine always visible
+- [x] Settings page with theme toggle
+- [x] Move or skip an unfinished routine item to a date/time
+- [x] Fix AI coach not working
+- [x] Redesign layout: friendlier, simpler, modern
+- [x] Answer: good next step after remix (fourth time)

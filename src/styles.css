@@ -492,3 +492,9 @@
   .feit-lift, .feit-bottom-link, .feit-side-link { transition: none; }
   .feit-lift:hover { transform: none; }
 }
+
+.dark .feit-hero {
+  background:
+    radial-gradient(120% 140% at 100% 0%, color-mix(in oklab, var(--sidebar-primary) 28%, transparent), transparent 55%),
+    linear-gradient(140deg, oklch(0.36 0.08 155), oklch(0.24 0.045 160));
+}

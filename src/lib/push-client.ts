@@ -25,7 +25,16 @@ function keyBytes(base64url: string) {
 
 async function registration() {
   const reg = await navigator.serviceWorker.register("/push-sw.js", { scope: "/push/" });
-  await navigator.serviceWorker.ready.catch(() => undefined);
+  // The worker's scope doesn't cover this page, so wait for it directly instead of serviceWorker.ready.
+  const worker = reg.installing ?? reg.waiting;
+  if (!reg.active && worker) {
+    await new Promise<void>((resolve) => {
+      const done = () => { if (worker.state === "activated") resolve(); };
+      worker.addEventListener("statechange", done);
+      done();
+      setTimeout(resolve, 10000);
+    });
+  }
   return reg;
 }
 

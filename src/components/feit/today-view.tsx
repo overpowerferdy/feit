@@ -30,8 +30,8 @@ export function TodayView() {
         <p className="text-xs font-bold uppercase tracking-wider opacity-80">Right now</p>
         <h2 className="mt-1 text-2xl font-extrabold sm:text-3xl">{current?.title ?? "Your day starts soon"}</h2>
         <p className="mt-1 text-sm opacity-85">{current ? `${fmtTime(current.time)}${current.end ? ` – ${fmtTime(current.end)}` : ""}` : items[0] ? `First up: ${items[0].title} at ${fmtTime(items[0].time)}` : ""}</p>
-        {next && <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-background/15 px-3 py-1.5 text-xs font-semibold">Next · {next.title} at {fmtTime(next.time)}</p>}
-        <div className="mt-5"><div className="h-2 overflow-hidden rounded-full bg-background/20"><div className="feit-bar h-full rounded-full bg-accent" style={{ width: `${items.length ? Math.round((done.filter((d) => items.some((i) => i.id === d)).length / items.length) * 100) : 0}%` }} /></div><p className="mt-1.5 text-xs opacity-80">{done.filter((d) => items.some((i) => i.id === d)).length} of {items.length} routine steps done</p></div>
+        {next && <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-sidebar-foreground/15 px-3 py-1.5 text-xs font-semibold">Next · {next.title} at {fmtTime(next.time)}</p>}
+        <div className="mt-5"><div className="h-2 overflow-hidden rounded-full bg-sidebar-foreground/20"><div className="feit-bar h-full rounded-full bg-accent" style={{ width: `${items.length ? Math.round((done.filter((d) => items.some((i) => i.id === d)).length / items.length) * 100) : 0}%` }} /></div><p className="mt-1.5 text-xs opacity-80">{done.filter((d) => items.some((i) => i.id === d)).length} of {items.length} routine steps done</p></div>
       </Card>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
