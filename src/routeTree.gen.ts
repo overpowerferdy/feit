@@ -11,12 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as BackupRouteImport } from './routes/backup'
 import { Route as HabitsRouteImport } from './routes/habits'
+import { Route as JournalRouteImport } from './routes/journal'
 import { Route as LearningRouteImport } from './routes/learning'
 import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WellnessRouteImport } from './routes/wellness'
 import { Route as WorkoutsRouteImport } from './routes/workouts'
+import { Route as LearnDayRouteImport } from './routes/learn.$day'
+import { Route as ApiPublicJobsRoutineRemindersRouteImport } from './routes/api/public/jobs/routine-reminders'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,14 +31,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BackupRoute = BackupRouteImport.update({
-  id: '/backup',
-  path: '/backup',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const HabitsRoute = HabitsRouteImport.update({
   id: '/habits',
   path: '/habits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JournalRoute = JournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LearningRoute = LearningRouteImport.update({
@@ -48,6 +51,11 @@ const ProgressRoute = ProgressRouteImport.update({
   path: '/progress',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WellnessRoute = WellnessRouteImport.update({
   id: '/wellness',
   path: '/wellness',
@@ -58,80 +66,112 @@ const WorkoutsRoute = WorkoutsRouteImport.update({
   path: '/workouts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnDayRoute = LearnDayRouteImport.update({
+  id: '/learn/$day',
+  path: '/learn/$day',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicJobsRoutineRemindersRoute =
+  ApiPublicJobsRoutineRemindersRouteImport.update({
+    id: '/api/public/jobs/routine-reminders',
+    path: '/api/public/jobs/routine-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/backup': typeof BackupRoute
   '/habits': typeof HabitsRoute
+  '/journal': typeof JournalRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
+  '/settings': typeof SettingsRoute
   '/wellness': typeof WellnessRoute
   '/workouts': typeof WorkoutsRoute
+  '/learn/$day': typeof LearnDayRoute
+  '/api/public/jobs/routine-reminders': typeof ApiPublicJobsRoutineRemindersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/backup': typeof BackupRoute
   '/habits': typeof HabitsRoute
+  '/journal': typeof JournalRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
+  '/settings': typeof SettingsRoute
   '/wellness': typeof WellnessRoute
   '/workouts': typeof WorkoutsRoute
+  '/learn/$day': typeof LearnDayRoute
+  '/api/public/jobs/routine-reminders': typeof ApiPublicJobsRoutineRemindersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/backup': typeof BackupRoute
   '/habits': typeof HabitsRoute
+  '/journal': typeof JournalRoute
   '/learning': typeof LearningRoute
   '/progress': typeof ProgressRoute
+  '/settings': typeof SettingsRoute
   '/wellness': typeof WellnessRoute
   '/workouts': typeof WorkoutsRoute
+  '/learn/$day': typeof LearnDayRoute
+  '/api/public/jobs/routine-reminders': typeof ApiPublicJobsRoutineRemindersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
-    | '/backup'
     | '/habits'
+    | '/journal'
     | '/learning'
     | '/progress'
+    | '/settings'
     | '/wellness'
     | '/workouts'
+    | '/learn/$day'
+    | '/api/public/jobs/routine-reminders'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/backup'
     | '/habits'
+    | '/journal'
     | '/learning'
     | '/progress'
+    | '/settings'
     | '/wellness'
     | '/workouts'
+    | '/learn/$day'
+    | '/api/public/jobs/routine-reminders'
   id:
     | '__root__'
     | '/'
     | '/auth'
-    | '/backup'
     | '/habits'
+    | '/journal'
     | '/learning'
     | '/progress'
+    | '/settings'
     | '/wellness'
     | '/workouts'
+    | '/learn/$day'
+    | '/api/public/jobs/routine-reminders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
-  BackupRoute: typeof BackupRoute
   HabitsRoute: typeof HabitsRoute
+  JournalRoute: typeof JournalRoute
   LearningRoute: typeof LearningRoute
   ProgressRoute: typeof ProgressRoute
+  SettingsRoute: typeof SettingsRoute
   WellnessRoute: typeof WellnessRoute
   WorkoutsRoute: typeof WorkoutsRoute
+  LearnDayRoute: typeof LearnDayRoute
+  ApiPublicJobsRoutineRemindersRoute: typeof ApiPublicJobsRoutineRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -150,18 +190,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/backup': {
-      id: '/backup'
-      path: '/backup'
-      fullPath: '/backup'
-      preLoaderRoute: typeof BackupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/habits': {
       id: '/habits'
       path: '/habits'
       fullPath: '/habits'
       preLoaderRoute: typeof HabitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journal': {
+      id: '/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof JournalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learning': {
@@ -178,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wellness': {
       id: '/wellness'
       path: '/wellness'
@@ -192,18 +239,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkoutsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/$day': {
+      id: '/learn/$day'
+      path: '/learn/$day'
+      fullPath: '/learn/$day'
+      preLoaderRoute: typeof LearnDayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/jobs/routine-reminders': {
+      id: '/api/public/jobs/routine-reminders'
+      path: '/api/public/jobs/routine-reminders'
+      fullPath: '/api/public/jobs/routine-reminders'
+      preLoaderRoute: typeof ApiPublicJobsRoutineRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
-  BackupRoute: BackupRoute,
   HabitsRoute: HabitsRoute,
+  JournalRoute: JournalRoute,
   LearningRoute: LearningRoute,
   ProgressRoute: ProgressRoute,
+  SettingsRoute: SettingsRoute,
   WellnessRoute: WellnessRoute,
   WorkoutsRoute: WorkoutsRoute,
+  LearnDayRoute: LearnDayRoute,
+  ApiPublicJobsRoutineRemindersRoute: ApiPublicJobsRoutineRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

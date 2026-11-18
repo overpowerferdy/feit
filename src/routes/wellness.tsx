@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FitTrackApp } from "@/components/fittrack-app";
+import { Shell } from "@/components/feit/shell";
+import { BodyView } from "@/components/feit/body-view";
 
 export const Route = createFileRoute("/wellness")({
-  head: () => ({ meta: [{ title: "Wellness — Feit" }, { name: "description", content: "Track your wellness in Feit." }, { property: "og:title", content: "Wellness — Feit" }, { property: "og:description", content: "Track your wellness in Feit." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
-  component: () => <FitTrackApp view="wellness" />,
+  head: () => ({ meta: [{ title: "Body — Feit" }, { name: "description", content: "Log steps, sleep, body weight, meals and food spending." }, { property: "og:title", content: "Body — Feit" }, { property: "og:description", content: "Log steps, sleep, body weight, meals and food spending." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  component: () => <Shell><BodyView /></Shell>,
 });

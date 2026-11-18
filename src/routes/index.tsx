@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FitTrackApp } from "@/components/fittrack-app";
+import { Shell } from "@/components/feit/shell";
+import { TodayView } from "@/components/feit/today-view";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Feit — Daily dashboard" }, { name: "description", content: "Your fitness, sleep, food, coding, and reading dashboard." }, { property: "og:title", content: "Feit — Daily dashboard" }, { property: "og:description", content: "Your fitness, sleep, food, coding, and reading dashboard." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
-  component: () => <FitTrackApp view="home" />,
+  head: () => ({ meta: [{ title: "Feit — Today" }, { name: "description", content: "Your routine, steps, sleep, food, coding and reading at a glance." }, { property: "og:title", content: "Feit — Today" }, { property: "og:description", content: "Your routine, steps, sleep, food, coding and reading at a glance." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  component: () => <Shell><TodayView /></Shell>,
 });
