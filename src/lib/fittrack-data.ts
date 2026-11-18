@@ -1,11 +1,26 @@
 export type StrengthEntry = { date: string; pushups: number; pullups: number; chinups: number };
-export type SleepEntry = { date: string; bedtime: string; wakeTime: string; minutes: number };
+export type SleepEntry = { date: string; bedDate?: string; bedtime: string; wakeTime: string; minutes: number };
 export type WeightEntry = { date: string; kg: number };
 export type MealEntry = { id: string; date: string; type: string; food: string; portion: string; protein: number };
 export type PurchaseEntry = { id: string; date: string; item: string; amount: number };
 export type CodingEntry = { id: string; date: string; minutes: number; note: string };
 export type ReadingEntry = { id: string; date: string; pages: number; minutes: number; note: string };
 export type WorkoutEntry = { date: string; name: string; completed: string[]; coreDone: boolean };
+export type StepEntry = { id: string; date: string; steps: number; km: number };
+export type JournalEntry = { date: string; mood: Mood; text: string; updatedAt: string };
+export type Mood = "great" | "good" | "okay" | "low" | "rough";
+export type RoutineItem = { id: string; title: string; start: string; end?: string };
+export type RoutineChange = { action: "skip" } | { action: "move"; toDate: string; toTime: string };
+export type LessonQuiz = { question: string; options: string[]; answer: number; explain: string };
+export type Lesson = { summary: string; sections: { heading: string; body: string }[]; example: string; quiz: LessonQuiz[]; problem: { title: string; prompt: string; starter: string } };
+export type CodeReview = { score: number; passed: boolean; summary: string; strengths: string[]; fixes: string[] };
+export type TopicProgress = { quizScore?: number; problemCode?: string; problemReview?: CodeReview };
+export type ProjectProgress = { title: string; brief: string; requirements: string[]; code?: string; review?: CodeReview };
+export interface LearnProgress {
+  lessons: Record<string, Lesson>;
+  topics: Record<string, TopicProgress>;
+  projects: Record<string, ProjectProgress>;
+}
 
 export interface FitTrackData {
   version: 1;
@@ -23,6 +38,14 @@ export interface FitTrackData {
   readingNotes: string;
   roadmap: Record<string, string[]>;
   rescheduledWorkouts?: Record<string, string>;
+  steps?: StepEntry[];
+  journal?: Record<string, JournalEntry>;
+  routine?: RoutineItem[];
+  routineDone?: Record<string, string[]>;
+  routineChanges?: Record<string, Record<string, RoutineChange>>;
+  learn?: LearnProgress;
+  stepGoal?: number;
+  remindersOn?: boolean;
 }
 
 export const STORAGE_KEY = "fittrack-data-v1";
@@ -40,7 +63,7 @@ export const workoutSchedule = [
   { day: "Sunday", title: "Rest & weekly review", type: "Review", exercises: ["Review workout progress", "Check strength improvements", "Prepare for the next week"] },
 ];
 
-export const coreFinisher = ["Plank · 2–3 × 30–45 seconds", "Reverse Crunches · 2 × 12–15", "Dead Bugs · 2 × 10 each side"];
+export const coreFinisher = ["Plank · 2–3 × 30–45 seconds", "Reverse Crunches · 2 × 12–15", "Knee Tucks · 2 × 10–12"];
 
 export const roadmapDays = [
   { date: "2026-11-16", title: "JavaScript Fundamentals", topics: ["Variables", "Data types", "Operators", "Conditions", "Loops", "Functions", "Arrays", "Objects"] },
@@ -117,4 +140,86 @@ export function minutesLabel(minutes: number) {
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
   return hours ? `${hours}h ${remainder}m` : `${remainder}m`;
+}
+export const HEIGHT_CM = 165;
+export const DEFAULT_STEP_GOAL = 8000;
+
+/** Rough distance from steps using a stride of ~41.5% of height. */
+export function estimateKm(steps: number, heightCm = HEIGHT_CM) {
+  if (!Number.isFinite(steps) || steps <= 0) return 0;
+  return Math.round(((steps * heightCm * 0.415) / 100000) * 100) / 100;
+}
+
+/** Body weight keeps at most two decimals, e.g. 62.85. */
+export function roundWeight(kg: number) {
+  return Math.round(kg * 100) / 100;
+}
+
+/** Minutes between two date+time pairs; null when the wake time is not after bedtime or longer than 24h. */
+export function sleepBetween(bedDate: string, bedTime: string, wakeDate: string, wakeTime: string) {
+  const start = new Date(`${bedDate}T${bedTime}:00`).getTime();
+  const end = new Date(`${wakeDate}T${wakeTime}:00`).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+  const minutes = Math.round((end - start) / 60000);
+  return minutes > 0 && minutes <= 24 * 60 ? minutes : null;
+}
+
+export function addDays(date: string, days: number) {
+  const d = new Date(`${date}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export const defaultRoutine: RoutineItem[] = [
+  { id: "wake", title: "Wake up", start: "08:00" },
+  { id: "breakfast", title: "Breakfast", start: "08:30" },
+  { id: "coding-1", title: "Coding session 1", start: "09:00", end: "11:00" },
+  { id: "break-1", title: "Break", start: "11:00", end: "11:30" },
+  { id: "coding-2", title: "Coding session 2", start: "11:30", end: "13:30" },
+  { id: "lunch", title: "Lunch", start: "13:30" },
+  { id: "rest", title: "Rest / personal time", start: "14:00", end: "15:00" },
+  { id: "reading", title: "Atomic Habits reading", start: "15:00", end: "15:30" },
+  { id: "workout", title: "Workout or recovery", start: "16:00", end: "17:00" },
+  { id: "evening", title: "Shower, dinner, free time", start: "17:00", end: "19:00" },
+  { id: "projects", title: "Personal projects / relaxation", start: "19:00", end: "21:30" },
+  { id: "wind-down", title: "Wind down", start: "21:30", end: "23:30" },
+  { id: "sleep", title: "Sleep", start: "23:45" },
+];
+
+export type ScheduledRoutineItem = RoutineItem & { time: string; movedFrom?: string };
+
+/** The routine for one day: regular items minus skipped/moved-away ones, plus items moved onto this day. */
+export function routineForDate(date: string, items: RoutineItem[], changes: Record<string, Record<string, RoutineChange>> = {}): ScheduledRoutineItem[] {
+  const own = changes[date] ?? {};
+  const list: ScheduledRoutineItem[] = items.filter((item) => !own[item.id]).map((item) => ({ ...item, time: item.start }));
+  for (const [fromDate, dayChanges] of Object.entries(changes)) {
+    for (const [itemId, change] of Object.entries(dayChanges)) {
+      if (change.action !== "move" || change.toDate !== date) continue;
+      const item = items.find((entry) => entry.id === itemId);
+      if (item) list.push({ ...item, id: `${item.id}@${fromDate}`, time: change.toTime, movedFrom: fromDate });
+    }
+  }
+  return list.sort((a, b) => a.time.localeCompare(b.time));
+}
+
+/** Items whose reminder time falls in (windowStart, windowEnd] minutes of the given local day. */
+export function dueRoutineItems(date: string, windowStartMinutes: number, windowEndMinutes: number, items: RoutineItem[], changes: Record<string, Record<string, RoutineChange>> = {}) {
+  return routineForDate(date, items, changes).filter((item) => {
+    const [h = 0, m = 0] = item.time.split(":").map(Number);
+    const minutes = h * 60 + m;
+    return minutes > windowStartMinutes && minutes <= windowEndMinutes;
+  });
+}
+
+export function emptyLearn(): LearnProgress {
+  return { lessons: {}, topics: {}, projects: {} };
+}
+
+export function topicKey(date: string, topic: string) {
+  return `${date}::${topic}`;
+}
+
+/** A topic counts as finished when the quiz has at least 2 right answers and the practice problem passed. */
+export function topicFinished(progress?: TopicProgress) {
+  return (progress?.quizScore ?? 0) >= 2 && !!progress?.problemReview?.passed;
 }

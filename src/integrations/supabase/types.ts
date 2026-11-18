@@ -14,7 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_push_keys: {
+        Row: {
+          created_at: string
+          id: string
+          private_jwk: Json
+          public_key: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          private_jwk: Json
+          public_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          private_jwk?: Json
+          public_key?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminder_deliveries: {
+        Row: {
+          reminder_key: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          reminder_key: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          reminder_key?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminder_schedules: {
+        Row: {
+          changes: Json
+          enabled: boolean
+          items: Json
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          changes?: Json
+          enabled?: boolean
+          items?: Json
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          changes?: Json
+          enabled?: boolean
+          items?: Json
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

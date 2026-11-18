@@ -8,3 +8,19 @@
 - [x] Workout day buttons: weekday names only
 - [x] Dark mode matching uploaded HTML
 - [x] Answer: good next step after remix (third time)
+- [ ] New Feit logo (app icon, favicon, sidebar, splash)
+- [ ] Steps tracker with km
+- [ ] Progress photo after a workout day
+- [ ] YouTube tutorial video inside each exercise card
+- [ ] Core finisher: Dead Bugs → Knee Tucks
+- [ ] Body weight with 2 decimals
+- [ ] Routine reminders as phone/laptop push notifications (even when closed)
+- [ ] Roadmap: learn in-app (lessons, quizzes, problems), final build task with no paste, AI grading
+- [ ] Delete any log entry
+- [ ] Clearer log forms (sleep: which day/time you slept and woke)
+- [ ] Daily journal
+- [ ] Daily routine always visible
+- [ ] Settings page with theme toggle
+- [ ] Move or skip an unfinished routine item to a date/time
+- [ ] Fix AI coach not working
+- [ ] Redesign layout: friendlier, simpler, modern
