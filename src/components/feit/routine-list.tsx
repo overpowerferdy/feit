@@ -12,12 +12,12 @@ function nowMinutes() {
 const toMinutes = (t: string) => { const [h = 0, m = 0] = t.split(":").map(Number); return h * 60 + m; };
 
 export function useRoutineToday(date: string) {
-  const { data } = useFeit();
-  const items = routineForDate(date, data.routine, data.routineChanges);
+  const { data, routineCtx, hydrated } = useFeit();
+  const items = routineForDate(date, data.routine, data.routineChanges, routineCtx);
   const done = data.routineDone[date] ?? [];
-  const now = nowMinutes();
   let currentIndex = -1;
-  items.forEach((item, i) => { if (toMinutes(item.time) <= now) currentIndex = i; });
+  // The clock is only read in the browser so the first paint matches the server.
+  if (hydrated) { const now = nowMinutes(); items.forEach((item, i) => { if (toMinutes(item.time) <= now) currentIndex = i; }); }
   return { items, done, current: items[currentIndex], next: items[currentIndex + 1], currentIndex };
 }
 
@@ -56,7 +56,7 @@ export function RoutineList({ date, isToday }: { date: string; isToday: boolean 
                 <button type="button" onClick={() => toggle(item.id)} aria-label={`${isDone ? "Unmark" : "Mark"} ${item.title} done`} className={`flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors active:scale-90 ${isDone ? "feit-pop border-primary bg-primary text-primary-foreground" : "border-input bg-card text-transparent hover:border-primary"}`}><Check size={15} strokeWidth={3} /></button>
                 <div className="min-w-0 flex-1">
                   <p className={`text-sm font-semibold ${isDone ? "text-muted-foreground line-through" : ""}`}>{item.title}{isNow && <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[0.65rem] font-bold uppercase text-accent-foreground">Now</span>}</p>
-                  <p className="text-xs text-muted-foreground">{fmtTime(item.time)}{item.end && !item.movedFrom ? ` – ${fmtTime(item.end)}` : ""}{item.movedFrom ? ` · moved from ${fmtDate(item.movedFrom, { weekday: "short" })}` : ""}</p>
+                  <p className="text-xs text-muted-foreground">{fmtTime(item.time)}{item.end && !item.movedFrom ? ` – ${fmtTime(item.end)}` : ""}{item.movedFrom ? ` · moved from ${fmtDate(item.movedFrom, { weekday: "short" })}` : ""}{item.detail ? ` · ${item.detail}` : ""}</p>
                 </div>
                 {!isDone && (item.movedFrom
                   ? <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => setChange(item.movedFrom!, baseId(item), null)}><RotateCcw size={14} />Undo</Button>

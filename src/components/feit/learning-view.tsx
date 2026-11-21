@@ -90,6 +90,10 @@ function Coding() {
 function Reading() {
   const { data, update, today, notify } = useFeit();
   const [editing, setEditing] = useState(false);
+  const todayPages = data.reading.filter((r) => r.date === today).reduce((sum, r) => sum + r.pages, 0);
+  // Today's assignment starts where you were at the start of the day.
+  const startPage = Math.max(0, data.readingPage - todayPages);
+  const nextFrom = startPage + 1, nextTo = Math.min(data.bookPages, startPage + data.readingGoal);
   function add(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -103,8 +107,13 @@ function Reading() {
   return (
     <>
       <Card className="p-5 sm:p-6">
-        <CardTitle icon={BookOpen} title="Atomic Habits" hint="Daily aim: 10–20 pages or 15–30 minutes" action={<button className="text-sm font-semibold text-primary" onClick={() => setEditing(!editing)}>{editing ? "Done" : "Book length"}</button>} />
-        {editing && <form className="mb-4 flex gap-2" onSubmit={(e) => { e.preventDefault(); const p = Number(new FormData(e.currentTarget).get("total")); if (p > 0) update((c) => ({ ...c, bookPages: p, readingPage: Math.min(c.readingPage, p) })); setEditing(false); }}><Input name="total" type="number" min="1" defaultValue={data.bookPages} aria-label="Total pages" /><Button type="submit">Save</Button></form>}
+        <CardTitle icon={BookOpen} title="Atomic Habits" hint={`Daily routine: ${data.readingGoal} pages a day`} action={<button className="text-sm font-semibold text-primary" onClick={() => setEditing(!editing)}>{editing ? "Done" : "Change"}</button>} />
+        {editing && <form className="mb-4 grid grid-cols-[1fr_1fr_auto] items-end gap-2" onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); const p = Number(f.get("total")); const g = Math.round(Number(f.get("goal"))); update((c) => ({ ...c, ...(p > 0 ? { bookPages: p, readingPage: Math.min(c.readingPage, p) } : {}), ...(g > 0 && g <= 200 ? { readingGoal: g } : {}) })); setEditing(false); notify("Reading plan saved."); }}><Field label="Pages per day"><Input name="goal" type="number" min="1" max="200" defaultValue={data.readingGoal} /></Field><Field label="Book length"><Input name="total" type="number" min="1" defaultValue={data.bookPages} /></Field><Button type="submit">Save</Button></form>}
+        <div className="mb-4 rounded-xl bg-secondary/60 p-4">
+          <p className="text-xs font-bold uppercase text-primary">Today's reading</p>
+          <p className="mt-1 text-lg font-extrabold">{nextFrom <= nextTo ? `Pages ${nextFrom}–${nextTo}` : "You finished the book!"}</p>
+          <div className="mt-2"><ProgressBar value={todayPages} max={data.readingGoal} right={`${todayPages} / ${data.readingGoal} pages`} /></div>
+        </div>
         <ProgressBar label={`Page ${data.readingPage} of ${data.bookPages}`} value={data.readingPage} max={data.bookPages} />
         <form onSubmit={add} className="mt-5 grid grid-cols-2 gap-3">
           <div className="col-span-2"><Field label="Day"><Input name="date" type="date" defaultValue={today} required /></Field></div>

@@ -45,12 +45,13 @@ export const syncReminderSchedule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) => z.object({
     enabled: z.boolean(),
+    options: z.object({ workoutMoves: z.record(day, day), readingPages: z.number().int().min(1).max(200) }).partial().optional(),
     timezone: z.string().min(1).max(60),
     items: z.array(itemSchema).max(60),
     changes: z.record(day, z.record(z.string().max(60), changeSchema)),
   }).parse(v))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("reminder_schedules").upsert({ user_id: context.userId, enabled: data.enabled, timezone: data.timezone, items: data.items, changes: data.changes, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    const { error } = await context.supabase.from("reminder_schedules").upsert({ user_id: context.userId, enabled: data.enabled, timezone: data.timezone, items: data.items, changes: data.changes, options: data.options ?? {}, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     if (error) throw new Error("Could not save your reminder schedule");
     return { ok: true };
   });

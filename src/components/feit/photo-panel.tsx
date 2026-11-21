@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, ImagePlus, Trash2 } from "lucide-react";
+import { Camera, ImagePlus, Images, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { compressImage, deletePhoto, listPhotos, savePhoto, type WorkoutPhoto } from "@/lib/photo-store";
 import { fmtDate, newId, useFeit } from "@/lib/feit-store";
@@ -20,22 +20,28 @@ function usePhotos() {
 export function DayPhoto({ date }: { date: string }) {
   const { notify } = useFeit();
   const { photos, refresh } = usePhotos();
-  const input = useRef<HTMLInputElement>(null);
+  const camera = useRef<HTMLInputElement>(null);
+  const gallery = useRef<HTMLInputElement>(null);
   const dayPhotos = photos.filter((p) => p.date === date);
-  async function add(file?: File) {
-    if (!file) return;
+  async function add(files?: FileList | null) {
+    const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!list.length) return;
     try {
-      await savePhoto({ id: newId(), date, createdAt: new Date().toISOString(), blob: await compressImage(file) });
+      for (const file of list) await savePhoto({ id: newId(), date, createdAt: new Date().toISOString(), blob: await compressImage(file) });
       await refresh();
-      notify("Workout photo saved on this device.");
+      notify(list.length > 1 ? `${list.length} workout photos saved on this device.` : "Workout photo saved on this device.");
     } catch { notify("That photo couldn't be saved."); }
   }
   return (
     <div className="rounded-2xl border border-dashed border-primary/40 bg-secondary/40 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><p className="font-bold">After-workout photo</p><p className="text-sm text-muted-foreground">Snap a picture to see your progress over time.</p></div>
-        <Button type="button" onClick={() => input.current?.click()}><Camera size={16} />Add photo</Button>
-        <input ref={input} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { void add(e.target.files?.[0]); e.target.value = ""; }} />
+        <div><p className="font-bold">After-workout photo</p><p className="text-sm text-muted-foreground">Take a picture or pick one from your gallery to see progress over time.</p></div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" onClick={() => camera.current?.click()}><Camera size={16} />Take photo</Button>
+          <Button type="button" variant="outline" onClick={() => gallery.current?.click()}><Images size={16} />From gallery</Button>
+        </div>
+        <input ref={camera} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { void add(e.target.files); e.target.value = ""; }} />
+        <input ref={gallery} type="file" accept="image/*" multiple className="hidden" aria-label="Choose workout photos" onChange={(e) => { void add(e.target.files); e.target.value = ""; }} />
       </div>
       {dayPhotos.length > 0 && <div className="mt-3 grid grid-cols-3 gap-2">{dayPhotos.map((p) => <PhotoThumb key={p.id} photo={p} onDelete={async () => { await deletePhoto(p.id); await refresh(); }} />)}</div>}
     </div>

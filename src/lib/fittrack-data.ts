@@ -5,7 +5,7 @@ export type MealEntry = { id: string; date: string; type: string; food: string; 
 export type PurchaseEntry = { id: string; date: string; item: string; amount: number };
 export type CodingEntry = { id: string; date: string; minutes: number; note: string };
 export type ReadingEntry = { id: string; date: string; pages: number; minutes: number; note: string };
-export type WorkoutEntry = { date: string; name: string; completed: string[]; coreDone: boolean };
+export type WorkoutEntry = { date: string; name: string; completed: string[]; coreDone: boolean; sets?: Record<string, number[]> };
 export type StepEntry = { id: string; date: string; steps: number; km: number };
 export type JournalEntry = { date: string; mood: Mood; text: string; updatedAt: string };
 export type Mood = "great" | "good" | "okay" | "low" | "rough";
@@ -46,12 +46,14 @@ export interface FitTrackData {
   learn?: LearnProgress;
   stepGoal?: number;
   remindersOn?: boolean;
+  readingGoal?: number;
 }
 
 export const STORAGE_KEY = "fittrack-data-v1";
 export const WEEKLY_FOOD_LIMIT = 100;
 export const SLEEP_TARGET_MINUTES = 480;
 export const CODING_TARGET_MINUTES = 240;
+export const DEFAULT_READING_PAGES = 15;
 
 export const workoutSchedule = [
   { day: "Monday", title: "Rest & reset", type: "Rest", exercises: ["Recovery day", "Existing commitment · 10 AM–1 PM"] },
@@ -98,7 +100,7 @@ export function canRescheduleWorkout(originalDate: string, targetDate: string, t
   return originalDate < today && targetDate > today && mondayOf(originalDate) === mondayOf(targetDate) && mondayOf(targetDate) === mondayOf(today);
 }
 
-type DayPlan = { day: string; title: string; type: string; exercises: string[] };
+export type DayPlan = { day: string; title: string; type: string; exercises: string[] };
 export function workoutForDate(date: string, reschedules: Record<string, string> = {}): DayPlan {
   const weekdayIndex = (new Date(`${date}T12:00:00`).getDay() + 6) % 7;
   const regularDay = workoutSchedule[weekdayIndex] ?? workoutSchedule[0];
@@ -186,29 +188,116 @@ export const defaultRoutine: RoutineItem[] = [
   { id: "sleep", title: "Sleep", start: "23:45" },
 ];
 
-export type ScheduledRoutineItem = RoutineItem & { time: string; movedFrom?: string };
+export type ScheduledRoutineItem = RoutineItem & { time: string; movedFrom?: string; detail?: string };
+
+export type RoutineContext = {
+  /** Workout moves: missed date -> new date. */
+  workoutMoves?: Record<string, string>;
+  readingPages?: number;
+  readingPage?: number;
+  bookPages?: number;
+};
+
+/** What the routine's workout slot means on a given day, so rest days never say "workout". */
+export function workoutRoutineTitle(plan: DayPlan) {
+  if (plan.type.startsWith("Workout")) return plan.title;
+  if (plan.type === "Recovery") return "Active recovery walk";
+  if (plan.type === "Review") return "Rest day · weekly workout review";
+  if (plan.type === "Moved") return `No workout · ${plan.title.replace("Workout moved", "moved")}`;
+  return "Rest day · no workout";
+}
+
+export function readingRoutineTitle(pages: number) {
+  return `Atomic Habits reading · ${pages} pages`;
+}
+
+/** Give the built-in workout and reading slots their real meaning for that day. */
+function dressItem(item: RoutineItem, forDate: string, ctx: RoutineContext): Pick<ScheduledRoutineItem, "title" | "detail"> {
+  if (item.id === "workout") {
+    const plan = workoutForDate(forDate, ctx.workoutMoves ?? {});
+    const isWorkout = plan.type.startsWith("Workout");
+    return { title: workoutRoutineTitle(plan), detail: isWorkout ? `${plan.exercises.length} exercises` : plan.type === "Recovery" ? "Easy 20–30 minute walk" : "Recover — no training today" };
+  }
+  if (item.id === "reading") {
+    const pages = Math.max(1, Math.round(ctx.readingPages ?? DEFAULT_READING_PAGES));
+    const from = (ctx.readingPage ?? 0) + 1;
+    const to = Math.min(ctx.bookPages ?? Infinity, from + pages - 1);
+    return { title: readingRoutineTitle(pages), detail: ctx.readingPage !== undefined && from <= to ? `Pages ${from}–${to}` : undefined };
+  }
+  return { title: item.title };
+}
 
 /** The routine for one day: regular items minus skipped/moved-away ones, plus items moved onto this day. */
-export function routineForDate(date: string, items: RoutineItem[], changes: Record<string, Record<string, RoutineChange>> = {}): ScheduledRoutineItem[] {
+export function routineForDate(date: string, items: RoutineItem[], changes: Record<string, Record<string, RoutineChange>> = {}, ctx: RoutineContext = {}): ScheduledRoutineItem[] {
   const own = changes[date] ?? {};
-  const list: ScheduledRoutineItem[] = items.filter((item) => !own[item.id]).map((item) => ({ ...item, time: item.start }));
+  const list: ScheduledRoutineItem[] = items.filter((item) => !own[item.id]).map((item) => ({ ...item, ...dressItem(item, date, ctx), time: item.start }));
   for (const [fromDate, dayChanges] of Object.entries(changes)) {
     for (const [itemId, change] of Object.entries(dayChanges)) {
       if (change.action !== "move" || change.toDate !== date) continue;
       const item = items.find((entry) => entry.id === itemId);
-      if (item) list.push({ ...item, id: `${item.id}@${fromDate}`, time: change.toTime, movedFrom: fromDate });
+      if (item) list.push({ ...item, ...dressItem(item, fromDate, ctx), id: `${item.id}@${fromDate}`, time: change.toTime, movedFrom: fromDate });
     }
   }
   return list.sort((a, b) => a.time.localeCompare(b.time));
 }
 
 /** Items whose reminder time falls in (windowStart, windowEnd] minutes of the given local day. */
-export function dueRoutineItems(date: string, windowStartMinutes: number, windowEndMinutes: number, items: RoutineItem[], changes: Record<string, Record<string, RoutineChange>> = {}) {
-  return routineForDate(date, items, changes).filter((item) => {
+export function dueRoutineItems(date: string, windowStartMinutes: number, windowEndMinutes: number, items: RoutineItem[], changes: Record<string, Record<string, RoutineChange>> = {}, ctx: RoutineContext = {}) {
+  return routineForDate(date, items, changes, ctx).filter((item) => {
     const [h = 0, m = 0] = item.time.split(":").map(Number);
     const minutes = h * 60 + m;
     return minutes > windowStartMinutes && minutes <= windowEndMinutes;
   });
+}
+
+export type SetPlan = { count: number; low: number; high: number; timed: boolean };
+
+/** Reads "3 × 10–12" or "3 × 30–45 sec" into sets and a rep/second range. */
+export function parseSets(text: string | undefined): SetPlan | null {
+  if (!text) return null;
+  const m = /(\d+)\s*[×x]\s*(\d+)(?:\s*[–-]\s*(\d+))?\s*(sec|seconds|s\b)?/i.exec(text);
+  if (!m) return null;
+  const count = Number(m[1]), low = Number(m[2]), high = Number(m[3] ?? m[2]);
+  if (!count || !low || count > 10) return null;
+  return { count, low, high: Math.max(low, high), timed: !!m[4] };
+}
+
+/** True when a saved tracker has any real logs in it. */
+export function hasLogs(d: FitTrackData) {
+  return d.workouts.length + d.strength.length + d.sleep.length + d.weight.length + d.meals.length + d.purchases.length + d.coding.length + d.reading.length + (d.steps?.length ?? 0) + Object.keys(d.journal ?? {}).length + Object.keys(d.habits).length + Object.keys(d.routineDone ?? {}).length > 0 || d.readingPage > 0;
+}
+
+function keyOf(v: unknown) {
+  if (v && typeof v === "object" && "id" in v && typeof (v as { id: unknown }).id === "string") return `id:${(v as { id: string }).id}`;
+  return JSON.stringify(v);
+}
+
+function mergeValue(a: unknown, b: unknown): unknown {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const seen = new Map<string, unknown>();
+    for (const v of [...a, ...b]) seen.set(keyOf(v), v);
+    return [...seen.values()];
+  }
+  if (a && b && typeof a === "object" && typeof b === "object" && !Array.isArray(a) && !Array.isArray(b)) {
+    const out: Record<string, unknown> = { ...(a as Record<string, unknown>) };
+    for (const [k, v] of Object.entries(b as Record<string, unknown>)) out[k] = k in out ? mergeValue(out[k], v) : v;
+    return out;
+  }
+  return b === undefined ? a : b;
+}
+
+/** Combine two trackers (e.g. phone + account copy) without losing entries; `b` wins on conflicting single values. */
+export function mergeData(a: FitTrackData, b: FitTrackData): FitTrackData {
+  const merged = mergeValue(a, b) as FitTrackData;
+  // Lists that are one-per-day keep the newer copy for that day.
+  const perDay = <T extends { date: string }>(list: T[], extra: (x: T) => string = () => "") => [...new Map(list.map((x) => [`${x.date}|${extra(x)}`, x])).values()];
+  merged.workouts = perDay(merged.workouts, (w) => w.name);
+  merged.sleep = perDay(merged.sleep);
+  merged.weight = perDay(merged.weight);
+  merged.strength = perDay(merged.strength);
+  merged.readingPage = Math.max(a.readingPage, b.readingPage);
+  if (a.routine?.length && b.routine?.length) merged.routine = b.routine;
+  return merged;
 }
 
 export function emptyLearn(): LearnProgress {

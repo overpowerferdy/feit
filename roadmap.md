@@ -25,3 +25,10 @@
 - [x] Fix AI coach not working
 - [x] Redesign layout: friendlier, simpler, modern
 - [x] Answer: good next step after remix (fourth time)
+- [ ] Food photo (camera/upload/gallery) → AI nutrition and benefits
+- [ ] Workout photos: allow gallery pick / upload, not camera only
+- [ ] Pictures for rest/recovery/review day items
+- [ ] Save logs to the signed-in account and sync across devices
+- [ ] Routine workout item matches the day's plan (rest vs workout)
+- [ ] Atomic Habits pages target shown on the reading routine item
+- [ ] Set timer and reps counter per exercise on workout pages

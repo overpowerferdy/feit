@@ -3,8 +3,9 @@ import { ArrowRight, Check, Clock3, Flame, Image as ImageIcon, Play, ShieldCheck
 import { Button } from "@/components/ui/button";
 import { CoachPanel } from "@/components/coach-panel";
 import { DayPhoto } from "@/components/feit/photo-panel";
+import { SetTracker } from "@/components/feit/set-tracker";
 import { PageHeader } from "@/components/feit/ui";
-import { canRescheduleWorkout, coreFinisher, mondayOf, workoutForDate } from "@/lib/fittrack-data";
+import { canRescheduleWorkout, coreFinisher, mondayOf, parseSets, workoutForDate } from "@/lib/fittrack-data";
 import { fmtDate, useFeit } from "@/lib/feit-store";
 
 const images = import.meta.glob("@/assets/exercises/*.jpg", { eager: true, import: "default" }) as Record<string, string>;
@@ -30,11 +31,17 @@ const map: [string, string, string, string | null][] = [
   ["Knee Tucks", "knee-tuck", "Lean back on your hands, pull knees to chest, extend slowly.", "x2umFUuBLRw"],
   ["Concentration Curls", "bicep-curl", "Elbow braced on inner thigh, curl slowly, squeeze at the top.", "os52QEIXQtM"],
   ["Walk", "recovery-stretch", "Easy pace — you should be able to talk.", null],
+  ["Recovery day", "rest-day", "No training today. Sleep well, drink water and let your muscles rebuild.", null],
+  ["Existing commitment", "commitment-day", "Busy day — that's fine. A short walk still counts if you have time.", null],
+  ["Review workout progress", "weekly-review", "Look back at this week's logs and note what felt easier.", null],
+  ["Check strength improvements", "push-up-b", "Compare your push-ups, pull-ups and chin-ups with last week.", null],
+  ["Prepare for the next week", "plan-next-week", "Set out your dumbbells and plan which days you'll train.", null],
+  ["This session is on its new day", "rest-day", "Your workout moved — rest here and train on the new day.", null],
   ["stretching", "recovery-pose", "Gentle, no bouncing.", null],
 ];
 const guide = (exercise: string) => map.find(([k]) => exercise.includes(k));
 
-function ExerciseCard({ ex, checked, onToggle, canCheck }: { ex: string; checked: boolean; onToggle?: () => void; canCheck: boolean }) {
+function ExerciseCard({ ex, checked, onToggle, canCheck, logged, onLog }: { ex: string; checked: boolean; onToggle?: () => void; canCheck: boolean; logged?: number[]; onLog?: (next: number[]) => void }) {
   const g = guide(ex);
   const src = g && img(g[1]);
   const video = g?.[3];
@@ -59,6 +66,7 @@ function ExerciseCard({ ex, checked, onToggle, canCheck }: { ex: string; checked
           {canCheck && <button aria-label={`Mark ${name} done`} onClick={onToggle} className={`flex size-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors active:scale-90 ${checked ? "feit-pop border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground hover:border-primary"}`}><Check size={18} strokeWidth={3} /></button>}
         </div>
         {g && <p className="mt-2 text-sm text-muted-foreground">{g[2]}</p>}
+        {onLog && <SetTracker name={name ?? ex} sets={sets} logged={logged ?? []} onChange={onLog} />}
       </div>
     </article>
   );
@@ -78,8 +86,18 @@ export function WorkoutView() {
   const isMissed = isWorkout && date < today && !moves[date] && done.length === 0;
   const freeDays = week.filter((d) => canRescheduleWorkout(date, d, today) && !workoutForDate(d, moves).type.startsWith("Workout") && !Object.values(moves).includes(d));
 
-  function save(completed: string[], coreDone: boolean) {
-    update((c) => ({ ...c, workouts: [...c.workouts.filter((w) => !(w.date === date && w.name === plan.type)), { date, name: plan.type, completed, coreDone }] }));
+  const setsLog = entry?.sets ?? {};
+  function save(completed: string[], coreDone: boolean, sets: Record<string, number[]> = setsLog) {
+    update((c) => ({ ...c, workouts: [...c.workouts.filter((w) => !(w.date === date && w.name === plan.type)), { date, name: plan.type, completed, coreDone, sets }] }));
+  }
+  const canTrack = isWorkout && !!today && date <= today;
+  /** Log sets; finishing every set ticks the exercise off automatically. */
+  function logSets(ex: string, next: number[], total: number | undefined) {
+    const sets = { ...setsLog, [ex]: next };
+    const complete = total !== undefined && next.length >= total;
+    const completed = complete ? Array.from(new Set([...done, ex])) : done;
+    save(completed, entry?.coreDone ?? false, sets);
+    if (complete && !done.includes(ex)) notify(`${ex.split(" · ")[0]} done!`);
   }
   function move(from: string, to: string) {
     const fromPlan = workoutForDate(from, moves);
@@ -94,7 +112,7 @@ export function WorkoutView() {
 
   return (
     <div className="space-y-5">
-      <PageHeader eyebrow="Move well, build steadily" title="Workouts" subtitle="Pick a day. Tap Video on any exercise to watch how it's done." />
+      <PageHeader eyebrow="Move well, build steadily" title="Workouts" subtitle="Pick a day. Watch the video, then count reps and time each set." />
       <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {week.map((d) => { const active = d === date; const isToday = d === today;
           return <button key={d} onClick={() => setPicked(d)} aria-label={`Select ${fmtDate(d, { weekday: "long", month: "long", day: "numeric" })}`} aria-pressed={active} className={`relative min-w-0 rounded-xl border px-0.5 py-2.5 text-center transition-all duration-200 active:scale-95 ${active ? "-translate-y-0.5 border-primary bg-primary text-primary-foreground shadow-md" : "border-border bg-card hover:bg-muted"}`}>
@@ -114,11 +132,11 @@ export function WorkoutView() {
 
         <div key={date} className="feit-stagger mt-5 grid gap-4 sm:grid-cols-2">
           {plan.exercises.map((ex) => { const checked = done.includes(ex);
-            return <ExerciseCard key={ex} ex={ex} checked={checked} canCheck={isWorkout} onToggle={() => save(checked ? done.filter((x) => x !== ex) : [...done, ex], entry?.coreDone ?? false)} />; })}
+            return <ExerciseCard key={ex} ex={ex} checked={checked} canCheck={isWorkout} onToggle={() => save(checked ? done.filter((x) => x !== ex) : [...done, ex], entry?.coreDone ?? false)} logged={setsLog[ex]} onLog={canTrack ? (next) => logSets(ex, next, parseSets(ex.split(" · ")[1])?.count) : undefined} />; })}
         </div>
 
         {isWorkout && <details className="mt-5 rounded-2xl bg-muted/60 p-4"><summary className="cursor-pointer font-bold">Core finisher {entry?.coreDone ? "✓" : "(optional)"}</summary>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">{coreFinisher.map((ex) => <ExerciseCard key={ex} ex={ex} checked={false} canCheck={false} />)}</div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{coreFinisher.map((ex) => <ExerciseCard key={ex} ex={ex} checked={false} canCheck={false} logged={setsLog[ex]} onLog={canTrack ? (next) => save(done, entry?.coreDone ?? false, { ...setsLog, [ex]: next }) : undefined} />)}</div>
           <Button className="mt-4" variant={entry?.coreDone ? "secondary" : "default"} onClick={() => save(done, !entry?.coreDone)}>{entry?.coreDone ? "Completed" : "Mark core done"}</Button></details>}
 
         {isWorkout && date <= today && <div className="mt-5"><DayPhoto date={date} /></div>}

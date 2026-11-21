@@ -13,11 +13,12 @@ export function ReminderSync() {
     if (!hydrated || !session || !today) return;
     // Only send recent and upcoming changes.
     const changes = Object.fromEntries(Object.entries(data.routineChanges).filter(([d]) => d >= addDays(today, -1)));
-    const payload = { enabled: data.remindersOn, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Manila", items: data.routine.map(({ id, title, start, end }) => ({ id, title, start, ...(end ? { end } : {}) })), changes };
+    const options = { workoutMoves: data.rescheduledWorkouts, readingPages: data.readingGoal };
+    const payload = { options, enabled: data.remindersOn, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Manila", items: data.routine.map(({ id, title, start, end }) => ({ id, title, start, ...(end ? { end } : {}) })), changes };
     const key = JSON.stringify(payload);
     if (key === last.current) return;
     const t = window.setTimeout(() => { sync({ data: payload }).then(() => { last.current = key; }).catch(() => undefined); }, 1200);
     return () => window.clearTimeout(t);
-  }, [data.routine, data.routineChanges, data.remindersOn, session, hydrated, today, sync]);
+  }, [data.routine, data.routineChanges, data.remindersOn, data.rescheduledWorkouts, data.readingGoal, session, hydrated, today, sync]);
   return null;
 }

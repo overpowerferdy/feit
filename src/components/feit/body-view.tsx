@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardTitle, Empty, Field, LogRow, PageHeader, ProgressBar, Segmented, selectClass } from "@/components/feit/ui";
 import { addDays, canAddPurchase, estimateKm, minutesLabel, mondayOf, roundWeight, sleepBetween, SLEEP_TARGET_MINUTES, WEEKLY_FOOD_LIMIT, weeklySpending } from "@/lib/fittrack-data";
 import { fmtDate, fmtTime, newId, useFeit } from "@/lib/feit-store";
+import { FoodPhotoCard } from "@/components/feit/food-photo";
 
 type Tab = "steps" | "sleep" | "weight" | "food";
 const tooltipStyle = { background: "var(--color-card)", borderColor: "var(--color-border)", borderRadius: 10 };
@@ -175,6 +176,7 @@ function FoodSection() {
   }
   return (
     <>
+      <FoodPhotoCard />
       <Card className="p-5 sm:p-6">
         <CardTitle icon={Utensils} title="Meals today" hint="Protein is a rough guess — that's fine." action={<span className="rounded-full bg-secondary px-3 py-1 text-sm font-bold text-secondary-foreground">{protein} g</span>} />
         <form onSubmit={addMeal} className="grid gap-3 sm:grid-cols-2">

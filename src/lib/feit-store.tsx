@@ -1,10 +1,16 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { createEmptyData, defaultRoutine, DEFAULT_STEP_GOAL, emptyLearn, isFitTrackData, STORAGE_KEY, type FitTrackData } from "@/lib/fittrack-data";
+import { createEmptyData, defaultRoutine, DEFAULT_READING_PAGES, DEFAULT_STEP_GOAL, emptyLearn, hasLogs, isFitTrackData, mergeData, STORAGE_KEY, type FitTrackData, type RoutineContext } from "@/lib/fittrack-data";
 
 export type ThemeChoice = "light" | "dark" | "device";
 const THEME_KEY = "fittrack-theme";
+/** When this device last changed the logs (ISO time), used to decide which copy is newer. */
+const SAVED_AT_KEY = "fittrack-saved-at";
+/** Which account this device's logs were last synced with. */
+const SYNCED_USER_KEY = "fittrack-synced-user";
+
+export type SyncState = "off" | "syncing" | "synced" | "error";
 
 export function localDate(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -27,6 +33,7 @@ export function withDefaults(data: FitTrackData): Required<FitTrackData> {
     learn: { ...emptyLearn(), ...(data.learn ?? {}) },
     stepGoal: data.stepGoal ?? DEFAULT_STEP_GOAL,
     remindersOn: data.remindersOn ?? false,
+    readingGoal: data.readingGoal ?? DEFAULT_READING_PAGES,
   };
 }
 
@@ -43,6 +50,9 @@ type Store = {
   isDark: boolean;
   session: Session | null;
   authReady: boolean;
+  sync: SyncState;
+  lastSynced: string;
+  routineCtx: RoutineContext;
 };
 
 const StoreContext = createContext<Store | null>(null);
@@ -56,6 +66,13 @@ export function FeitProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [sync, setSync] = useState<SyncState>("off");
+  const [lastSynced, setLastSynced] = useState("");
+  const savedAt = useRef("");
+  const skipUpload = useRef(false);
+  const cloudReady = useRef(false);
+  const rawRef = useRef(raw);
+  rawRef.current = raw;
 
   useEffect(() => {
     setToday(localDate());
@@ -68,6 +85,7 @@ export function FeitProvider({ children }: { children: ReactNode }) {
     } catch {
       setNotice("Saved data could not be read; a fresh tracker is ready.");
     }
+    savedAt.current = window.localStorage.getItem(SAVED_AT_KEY) ?? "";
     const saved = window.localStorage.getItem(THEME_KEY);
     if (saved === "light" || saved === "dark") setThemeState(saved);
     setHydrated(true);
@@ -97,6 +115,72 @@ export function FeitProvider({ children }: { children: ReactNode }) {
     if (hydrated) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(raw));
   }, [raw, hydrated]);
 
+  // ---- Account sync: the signed-in account keeps a copy of the logs so every device gets them. ----
+  const userId = session?.user.id ?? "";
+  const markLocal = useCallback(() => {
+    savedAt.current = new Date().toISOString();
+    window.localStorage.setItem(SAVED_AT_KEY, savedAt.current);
+  }, []);
+  const push = useCallback(async (uid: string) => {
+    setSync("syncing");
+    const at = savedAt.current || new Date().toISOString();
+    const { error } = await supabase.from("user_data").upsert({ user_id: uid, data: rawRef.current as never, updated_at: at }, { onConflict: "user_id" });
+    if (error) { setSync("error"); return; }
+    setSync("synced");
+    setLastSynced(new Date().toISOString());
+  }, []);
+  const applyCloud = useCallback((next: FitTrackData, at: string) => {
+    skipUpload.current = true;
+    savedAt.current = at;
+    window.localStorage.setItem(SAVED_AT_KEY, at);
+    setRaw(next);
+  }, []);
+  const pull = useCallback(async (uid: string, first: boolean) => {
+    setSync("syncing");
+    const { data: row, error } = await supabase.from("user_data").select("data, updated_at").eq("user_id", uid).maybeSingle();
+    if (error) { setSync("error"); return; }
+    const local = rawRef.current;
+    const joinedBefore = window.localStorage.getItem(SYNCED_USER_KEY) === uid;
+    if (!row || !isFitTrackData(row.data)) {
+      await push(uid);
+    } else if (first && !joinedBefore) {
+      // First time this device meets this account: keep entries from both sides.
+      if (hasLogs(local)) {
+        const merged = mergeData(row.data, local);
+        markLocal();
+        skipUpload.current = true;
+        setRaw(merged);
+        rawRef.current = merged;
+        await push(uid);
+      } else applyCloud(row.data, new Date(row.updated_at).toISOString());
+    } else {
+      const cloudAt = Date.parse(row.updated_at), localAt = Date.parse(savedAt.current || "0");
+      if (cloudAt > localAt) applyCloud(row.data, new Date(cloudAt).toISOString());
+      else if (localAt > cloudAt) { await push(uid); return; }
+    }
+    window.localStorage.setItem(SYNCED_USER_KEY, uid);
+    cloudReady.current = true;
+    setSync("synced");
+    setLastSynced(new Date().toISOString());
+  }, [applyCloud, markLocal, push]);
+
+  useEffect(() => {
+    cloudReady.current = false;
+    if (!hydrated || !userId) { setSync("off"); return; }
+    void pull(userId, true);
+    const refresh = () => { if (document.visibilityState === "visible" && cloudReady.current) void pull(userId, false); };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => { window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); };
+  }, [hydrated, userId, pull]);
+
+  useEffect(() => {
+    if (skipUpload.current) { skipUpload.current = false; return; }
+    if (!cloudReady.current || !userId) return;
+    const t = window.setTimeout(() => void push(userId), 1500);
+    return () => window.clearTimeout(t);
+  }, [raw, userId, push]);
+
   useEffect(() => {
     if (!notice) return;
     const t = window.setTimeout(() => setNotice(""), 3800);
@@ -104,13 +188,15 @@ export function FeitProvider({ children }: { children: ReactNode }) {
   }, [notice]);
 
   const data = useMemo(() => withDefaults(raw), [raw]);
-  const update = useCallback((updater: (current: Required<FitTrackData>) => FitTrackData) => setRaw((current) => updater(withDefaults(current))), []);
+  const update = useCallback((updater: (current: Required<FitTrackData>) => FitTrackData) => { markLocal(); setRaw((current) => updater(withDefaults(current))); }, [markLocal]);
+  const replace = useCallback((next: FitTrackData) => { markLocal(); setRaw(next); }, [markLocal]);
+  const routineCtx = useMemo<RoutineContext>(() => ({ workoutMoves: data.rescheduledWorkouts, readingPages: data.readingGoal, readingPage: data.readingPage, bookPages: data.bookPages }), [data.rescheduledWorkouts, data.readingGoal, data.readingPage, data.bookPages]);
   const setTheme = useCallback((next: ThemeChoice) => {
     if (next === "device") window.localStorage.removeItem(THEME_KEY); else window.localStorage.setItem(THEME_KEY, next);
     setThemeState(next);
   }, []);
 
-  const value: Store = { data, update, replace: setRaw, today, hydrated, notice, notify: setNotice, theme, setTheme, isDark, session, authReady };
+  const value: Store = { data, update, replace, today, hydrated, notice, notify: setNotice, theme, setTheme, isDark, session, authReady, sync, lastSynced, routineCtx };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 
