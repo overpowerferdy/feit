@@ -41,7 +41,7 @@ const map: [string, string, string, string | null][] = [
 ];
 const guide = (exercise: string) => map.find(([k]) => exercise.includes(k));
 
-function ExerciseCard({ ex, checked, onToggle, canCheck, logged, onLog }: { ex: string; checked: boolean; onToggle?: () => void; canCheck: boolean; logged?: number[]; onLog?: (next: number[]) => void }) {
+function ExerciseCard({ ex, checked, onToggle, canCheck, logged, onLog }: { ex: string; checked: boolean; onToggle?: () => void; canCheck: boolean; logged?: number[] | undefined; onLog?: ((next: number[]) => void) | undefined }) {
   const g = guide(ex);
   const src = g && img(g[1]);
   const video = g?.[3];

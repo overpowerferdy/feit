@@ -188,14 +188,14 @@ export const defaultRoutine: RoutineItem[] = [
   { id: "sleep", title: "Sleep", start: "23:45" },
 ];
 
-export type ScheduledRoutineItem = RoutineItem & { time: string; movedFrom?: string; detail?: string };
+export type ScheduledRoutineItem = RoutineItem & { time: string; movedFrom?: string; detail?: string | undefined };
 
 export type RoutineContext = {
   /** Workout moves: missed date -> new date. */
   workoutMoves?: Record<string, string>;
-  readingPages?: number;
-  readingPage?: number;
-  bookPages?: number;
+  readingPages?: number | undefined;
+  readingPage?: number | undefined;
+  bookPages?: number | undefined;
 };
 
 /** What the routine's workout slot means on a given day, so rest days never say "workout". */

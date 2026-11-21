@@ -35,7 +35,7 @@ function useTick(active: boolean) {
 }
 
 /** Per-set logging: a reps counter (or a timer for timed holds) and a rest countdown between sets. */
-export function SetTracker({ name, sets, logged, onChange }: { name: string; sets?: string; logged: number[]; onChange: (next: number[]) => void }) {
+export function SetTracker({ name, sets, logged, onChange }: { name: string; sets?: string | undefined; logged: number[]; onChange: (next: number[]) => void }) {
   const plan = parseSets(sets);
   const [reps, setReps] = useState(plan?.low ?? 10);
   const [startedAt, setStartedAt] = useState<number | null>(null);
